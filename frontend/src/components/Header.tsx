@@ -103,16 +103,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Refresh Button */}
-        <button
-          onClick={onRefresh}
-          disabled={isRefreshing}
-          title="Refresh Data from Local Database"
-          className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
-        </button>
-
         {/* Quick Action: New Bill */}
         {activeTab !== 'billing' && (
           <button

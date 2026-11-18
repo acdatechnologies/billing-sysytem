@@ -67,6 +67,10 @@ export const SalesReportsPage: React.FC = () => {
   }, [selectedPeriod]);
 
   const handleApplyCustomDate = () => {
+    if (customStartDate && customEndDate && new Date(customStartDate) > new Date(customEndDate)) {
+      setStatusMessage({ text: 'Start date cannot be after End date.', type: 'error' });
+      return;
+    }
     if (selectedPeriod === 'CUSTOM') {
       fetchReport();
     } else {
@@ -138,16 +142,6 @@ export const SalesReportsPage: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => fetchReport()}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-xs transition-colors"
-            title="Refresh Report Data"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-purple-600' : ''}`} />
-            Refresh
-          </button>
-
           <div className="relative inline-block text-left">
             <div className="flex items-center gap-2">
               <button

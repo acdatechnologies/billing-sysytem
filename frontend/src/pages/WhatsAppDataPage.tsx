@@ -14,6 +14,11 @@ import {
   Filter,
 } from 'lucide-react';
 import { Customer, Invoice, WhatsAppLog, BusinessInfo } from '../types';
+import { invoiceApi } from '../api/invoiceApi';
+import { customerApi } from '../api/customerApi';
+import { settingsApi } from '../api/settingsApi';
+import { whatsappApi } from '../api/whatsappApi';
+import { validateMobile } from '../utils/validators';
 
 export const WhatsAppDataPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'INVOICE_SHARE' | 'PROMO_BROADCAST' | 'LOGS'>('INVOICE_SHARE');
@@ -39,24 +44,22 @@ export const WhatsAppDataPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      if (window.electronAPI) {
-        const [invList, custList, biz, wLogs] = await Promise.all([
-          window.electronAPI.getInvoices({ status: 'ACTIVE', limit: 50 }),
-          window.electronAPI.getCustomers(),
-          window.electronAPI.getBusinessInfo(),
-          window.electronAPI.getWhatsAppLogs(50),
-        ]);
-        setInvoices(invList || []);
-        setCustomers(custList || []);
-        setBusinessInfo(biz || null);
-        setLogs(wLogs || []);
+      const [invList, custList, biz, wLogs] = await Promise.all([
+        invoiceApi.getInvoices({ status: 'ACTIVE', limit: 50 }),
+        customerApi.getCustomers(),
+        settingsApi.getBusinessInfo(),
+        whatsappApi.getWhatsAppLogs(50),
+      ]);
+      setInvoices(invList || []);
+      setCustomers(custList || []);
+      setBusinessInfo(biz || null);
+      setLogs(wLogs || []);
 
-        if (invList && invList.length > 0 && !selectedInvoiceId) {
-          const first = invList[0];
-          setSelectedInvoiceId(first.id);
-          setInvoiceCustomerMobile(first.customer_mobile || '');
-          buildInvoiceMessage(first, biz?.name || 'VND Tech Enterprises');
-        }
+      if (invList && invList.length > 0 && !selectedInvoiceId) {
+        const first = invList[0];
+        setSelectedInvoiceId(first.id);
+        setInvoiceCustomerMobile(first.customer_mobile || '');
+        buildInvoiceMessage(first, biz?.name || 'VND Tech Enterprises');
       }
     } catch (err) {
       console.error('[WhatsAppDataPage] Error fetching data:', err);
@@ -84,21 +87,20 @@ export const WhatsAppDataPage: React.FC = () => {
   };
 
   const handleSendInvoiceWhatsApp = async () => {
-    if (!invoiceCustomerMobile) {
-      alert('Please enter or verify the customer mobile number.');
+    const mobErr = validateMobile(invoiceCustomerMobile, true);
+    if (mobErr) {
+      alert(mobErr);
       return;
     }
     const inv = invoices.find((i) => i.id === selectedInvoiceId);
     try {
-      if (window.electronAPI) {
-        await window.electronAPI.openWhatsApp({
-          mobile: invoiceCustomerMobile,
-          message: invoiceCustomMessage,
-          customerId: inv?.customer_id,
-          invoiceId: inv?.id,
-        });
-        fetchData();
-      }
+      await whatsappApi.openWhatsApp({
+        mobile: invoiceCustomerMobile,
+        message: invoiceCustomMessage,
+        customerId: inv?.customer_id,
+        invoiceId: inv?.id,
+      });
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to open WhatsApp');
     }
@@ -129,15 +131,13 @@ export const WhatsAppDataPage: React.FC = () => {
       .replace(/\[Business Name\]/g, bizName);
 
     try {
-      if (window.electronAPI) {
-        await window.electronAPI.openWhatsApp({
-          mobile: c.mobile,
-          message: personalizedMessage,
-          customerId: c.id,
-        });
-        setSentMessageIds((prev) => ({ ...prev, [c.id]: true }));
-        fetchData();
-      }
+      await whatsappApi.openWhatsApp({
+        mobile: c.mobile,
+        message: personalizedMessage,
+        customerId: c.id,
+      });
+      setSentMessageIds((prev) => ({ ...prev, [c.id]: true }));
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to open WhatsApp');
     }
@@ -184,14 +184,6 @@ export const WhatsAppDataPage: React.FC = () => {
             <span>Message Log ({logs.length})</span>
           </button>
         </div>
-
-        <button
-          onClick={fetchData}
-          title="Refresh"
-          className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 transition-colors ml-auto sm:ml-0"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-        </button>
       </div>
 
       {/* Tab 1: Share Invoice on WhatsApp */}

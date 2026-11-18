@@ -54,21 +54,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const loadData = useCallback(() => {
-    if (window.electronAPI) {
-      window.electronAPI.getAppInfo().then(setAppInfo).catch(console.error);
-      window.electronAPI
-        .getInstalledPrinters()
-        .then((list) => {
-          setPrinters(list || []);
-        })
-        .catch(console.error);
-      window.electronAPI
-        .getSyncStatus()
-        .then((s) => {
-          if (s) setSyncStatus(s);
-        })
-        .catch(console.error);
-    }
+    settingsApi.getAppInfo().then(setAppInfo).catch(console.error);
+    settingsApi.getInstalledPrinters().then((list) => {
+      setPrinters(list || []);
+    }).catch(console.error);
+    syncApi.getSyncStatus().then((s) => {
+      if (s) setSyncStatus(s);
+    }).catch(console.error);
+
     if (businessInfo) {
       if (businessInfo.paper_size) setPaperSize(businessInfo.paper_size);
       if (businessInfo.default_printer) setSelectedPrinter(businessInfo.default_printer);
@@ -83,14 +76,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
     try {
       setIsSaving(true);
       setFeedback(null);
-      if (window.electronAPI) {
-        await window.electronAPI.savePrinterSettings({
-          paperSize,
-          defaultPrinter: selectedPrinter || undefined,
-        });
-        setFeedback({ type: 'success', message: 'Printer configuration saved successfully.' });
-        onRefresh();
-      }
+      await settingsApi.savePrinterSettings({
+        paperSize,
+        defaultPrinter: selectedPrinter || undefined,
+      });
+      setFeedback({ type: 'success', message: 'Printer configuration saved successfully.' });
+      onRefresh();
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Failed to save settings.' });
     } finally {
@@ -118,21 +109,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
         </div>
       `;
 
-      if (window.electronAPI) {
-        const res = await window.electronAPI.printInvoice({
-          printerName: selectedPrinter || undefined,
-          silent: false,
-          paperFormat: paperSize as any,
-          htmlContent: testSlipHtml,
-        });
+      const res = await settingsApi.printInvoice({
+        printerName: selectedPrinter || undefined,
+        silent: false,
+        paperSize,
+        htmlContent: testSlipHtml,
+      });
 
-        if (res.success) {
-          setFeedback({ type: 'success', message: 'Test print sent to printer successfully.' });
-        } else {
-          setFeedback({ type: 'error', message: res.message || 'Test print failed.' });
-        }
+      if (res.success) {
+        setFeedback({ type: 'success', message: 'Test print sent to printer successfully.' });
       } else {
-        window.print();
+        setFeedback({ type: 'error', message: res.message || 'Test print failed.' });
       }
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Test print error.' });
@@ -146,14 +133,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
     try {
       setIsSyncing(true);
       setFeedback(null);
-      if (window.electronAPI) {
-        const res = await window.electronAPI.triggerSync();
-        setFeedback({
-          type: 'success',
-          message: `Cloud synchronization complete! Pushed ${res.pushedCount} mutations to MongoDB Atlas.`,
-        });
-        loadData();
-      }
+      const res = await syncApi.triggerSync();
+      setFeedback({
+        type: 'success',
+        message: res.message || 'Cloud synchronization complete!',
+      });
+      loadData();
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Cloud synchronization failed.' });
     } finally {
@@ -165,13 +150,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
     try {
       setIsBackingUp(true);
       setFeedback(null);
-      if (window.electronAPI) {
-        const res = await window.electronAPI.requestCloudBackup();
-        setFeedback({
-          type: 'success',
-          message: `Cloud backup verified! Backed up ${res.backup?.counts?.invoices || 0} invoices, ${res.backup?.counts?.products || 0} products.`,
-        });
-      }
+      const res = await syncApi.requestCloudBackup();
+      setFeedback({
+        type: 'success',
+        message: res.message || 'Cloud backup verified and completed!',
+      });
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Cloud backup failed.' });
     } finally {
@@ -182,17 +165,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
   const handleCloudLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
+
+    if (!loginEmail.trim()) {
+      setLoginError('Email is required.');
+      return;
+    }
+    if (!loginPassword) {
+      setLoginError('Password is required.');
+      return;
+    }
+
     try {
-      if (window.electronAPI) {
-        await window.electronAPI.loginCloud({
-          serverUrl: loginServerUrl,
-          email: loginEmail,
-          password: loginPassword,
-        });
-        setShowLoginModal(false);
-        setFeedback({ type: 'success', message: 'Connected to MongoDB Atlas cloud account successfully!' });
-        loadData();
-      }
+      await syncApi.loginCloud({
+        serverUrl: loginServerUrl.trim(),
+        email: loginEmail.trim(),
+        password: loginPassword,
+      });
+      setShowLoginModal(false);
+      setFeedback({ type: 'success', message: 'Connected to MongoDB Atlas cloud account successfully!' });
+      loadData();
     } catch (err: any) {
       setLoginError(err.message || 'Authentication failed');
     }

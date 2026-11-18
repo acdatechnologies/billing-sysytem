@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Printer, Download, Share2, AlertTriangle, CheckCircle, Ban, MessageCircle } from 'lucide-react';
 import { Invoice } from '../types';
 import { PrintInvoiceModal } from './PrintInvoiceModal';
+import { whatsappApi } from '../api/whatsappApi';
 
 interface InvoiceDetailModalProps {
   isOpen: boolean;
@@ -45,14 +46,12 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
     const message = `Hello ${invoice.customer_name},\n\nThank you for shopping with ${bizName}.\n\nYour invoice #${invoice.invoice_number} for ₹${invoice.grand_total.toFixed(2)} is ready.\n\nThank you for your business!\n${bizName}\nContact: 88255 08237`;
 
     try {
-      if (window.electronAPI) {
-        await window.electronAPI.openWhatsApp({
-          mobile: invoice.customer_mobile,
-          message,
-          customerId: invoice.customer_id,
-          invoiceId: invoice.id,
-        });
-      }
+      await whatsappApi.openWhatsApp({
+        mobile: invoice.customer_mobile,
+        message,
+        customerId: invoice.customer_id,
+        invoiceId: invoice.id,
+      });
     } catch (err: any) {
       alert(err.message || 'Failed to open WhatsApp');
     }

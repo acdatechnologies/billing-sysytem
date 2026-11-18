@@ -399,14 +399,6 @@ export const BillHistoryPage: React.FC = () => {
             <option value="PARTIAL">Partially Paid</option>
             <option value="UNPAID">Unpaid Only</option>
           </select>
-
-          <button
-            onClick={fetchInvoices}
-            title="Refresh Invoices"
-            className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-600' : ''}`} />
-          </button>
         </div>
       </div>
 

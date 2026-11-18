@@ -775,14 +775,6 @@ export const ProductsPage: React.FC = () => {
           </select>
 
           <button
-            onClick={fetchData}
-            title="Refresh Products"
-            className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-600' : ''}`} />
-          </button>
-
-          <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-xs transition-all ml-auto md:ml-0"
           >

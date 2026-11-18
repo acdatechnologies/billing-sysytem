@@ -659,14 +659,6 @@ export const CustomersPage: React.FC = () => {
           </button>
 
           <button
-            onClick={fetchCustomers}
-            className="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50"
-            title="Refresh Directory"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          <button
             onClick={handleOpenAdd}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-semibold shadow-xs transition-colors"
           >

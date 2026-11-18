@@ -1,4 +1,4 @@
-import { getElectronAPI, isElectron, restRequest } from './apiClient';
+import { getElectronAPI, restRequest } from './apiClient';
 import { Product, ProductCategory } from '../types';
 
 export interface ProductFilter {
@@ -11,25 +11,77 @@ export interface ProductInput {
   name: string;
   code: string;
   barcode?: string;
-  categoryId?: string;
   category_id?: string;
+  categoryId?: string;
   unit?: string;
-  purchasePrice?: number;
   purchase_price?: number;
-  sellingPrice?: number;
+  purchasePrice?: number;
   selling_price?: number;
-  openingStock?: number;
+  sellingPrice?: number;
   opening_stock?: number;
-  currentStock?: number;
   current_stock?: number;
-  minimumStock?: number;
+  currentStock?: number;
   minimum_stock?: number;
-  gstRate?: number;
+  minimumStock?: number;
   gst_rate?: number;
-  hsnCode?: string;
+  gstRate?: number;
   hsn_code?: string;
-  isActive?: number;
+  hsnCode?: string;
   is_active?: number;
+  isActive?: number;
+}
+
+function formatProductPayload(input: any) {
+  const sellingPrice = Number(input.selling_price ?? input.sellingPrice);
+  const purchasePrice = Number(input.purchase_price ?? input.purchasePrice ?? 0);
+  const currentStock = Number(input.current_stock ?? input.opening_stock ?? input.currentStock ?? 0);
+  const minimumStock = Number(input.minimum_stock ?? input.minimumStock ?? 5);
+  const gstRate = Number(input.gst_rate ?? input.gstRate ?? 18);
+
+  return {
+    ...input,
+    name: input.name?.trim(),
+    code: input.code?.trim().toUpperCase(),
+    barcode: input.barcode?.trim() || '',
+    unit: input.unit || 'PCS',
+    selling_price: sellingPrice,
+    sellingPrice,
+    purchase_price: purchasePrice,
+    purchasePrice,
+    current_stock: currentStock,
+    currentStock,
+    opening_stock: currentStock,
+    minimum_stock: minimumStock,
+    minimumStock,
+    gst_rate: gstRate,
+    gstRate,
+    category_id: input.category_id || input.categoryId || '',
+    categoryId: input.category_id || input.categoryId || '',
+    hsn_code: input.hsn_code || input.hsnCode || '',
+    hsnCode: input.hsn_code || input.hsnCode || '',
+  };
+}
+
+function formatProductResponse(p: any): Product {
+  return {
+    ...p,
+    id: p.id || p.productId,
+    business_id: p.business_id || p.businessId || 'default',
+    name: p.name,
+    code: p.code,
+    barcode: p.barcode || '',
+    unit: p.unit || 'PCS',
+    selling_price: Number(p.selling_price ?? p.sellingPrice ?? 0),
+    purchase_price: Number(p.purchase_price ?? p.purchasePrice ?? 0),
+    current_stock: Number(p.current_stock ?? p.currentStock ?? 0),
+    opening_stock: Number(p.opening_stock ?? p.currentStock ?? 0),
+    minimum_stock: Number(p.minimum_stock ?? p.minimumStock ?? 5),
+    gst_rate: Number(p.gst_rate ?? p.gstRate ?? 18),
+    hsn_code: p.hsn_code ?? p.hsnCode ?? '',
+    category_id: p.category_id ?? p.categoryId ?? '',
+    category_name: p.category_name ?? p.categoryName ?? '',
+    is_active: p.is_active !== undefined ? p.is_active : (p.isActive !== undefined ? p.isActive : 1),
+  };
 }
 
 export const productApi = {
@@ -37,7 +89,8 @@ export const productApi = {
   async getProducts(filter?: ProductFilter): Promise<Product[]> {
     const electron = getElectronAPI();
     if (electron) {
-      return await electron.getProducts(filter);
+      const list = await electron.getProducts(filter);
+      return Array.isArray(list) ? list.map(formatProductResponse) : [];
     }
     const params = new URLSearchParams();
     if (filter?.search) params.append('search', filter.search);
@@ -46,40 +99,49 @@ export const productApi = {
       params.append('stockStatus', filter.stockStatus);
     }
     const query = params.toString() ? `?${params.toString()}` : '';
-    return await restRequest<Product[]>(`/products${query}`);
+    const res = await restRequest<Product[]>(`/products${query}`);
+    return Array.isArray(res) ? res.map(formatProductResponse) : [];
   },
 
   // Get a single product by ID
   async getProductById(id: string): Promise<Product | null> {
     const electron = getElectronAPI();
     if (electron) {
-      return await electron.getProductById(id);
+      const p = await electron.getProductById(id);
+      return p ? formatProductResponse(p) : null;
     }
-    return await restRequest<Product>(`/products/${id}`);
+    const res = await restRequest<Product>(`/products/${id}`);
+    return res ? formatProductResponse(res) : null;
   },
 
   // Create new product
   async createProduct(input: ProductInput): Promise<Product> {
+    const payload = formatProductPayload(input);
     const electron = getElectronAPI();
     if (electron) {
-      return await electron.createProduct(input);
+      const created = await electron.createProduct(payload);
+      return formatProductResponse(created);
     }
-    return await restRequest<Product>('/products', {
+    const res = await restRequest<Product>('/products', {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: JSON.stringify(payload),
     });
+    return formatProductResponse(res);
   },
 
   // Update existing product
   async updateProduct(id: string, input: Partial<ProductInput>): Promise<Product> {
+    const payload = formatProductPayload(input);
     const electron = getElectronAPI();
     if (electron) {
-      return await electron.updateProduct(id, input);
+      const updated = await electron.updateProduct(id, payload);
+      return formatProductResponse(updated);
     }
-    return await restRequest<Product>(`/products/${id}`, {
+    const res = await restRequest<Product>(`/products/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(input),
+      body: JSON.stringify(payload),
     });
+    return formatProductResponse(res);
   },
 
   // Delete product

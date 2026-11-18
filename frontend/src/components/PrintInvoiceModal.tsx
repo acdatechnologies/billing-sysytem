@@ -11,6 +11,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { Invoice, PrinterDevice } from '../types';
+import { settingsApi } from '../api/settingsApi';
 
 interface PrintInvoiceModalProps {
   isOpen: boolean;
@@ -41,16 +42,14 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
         setPaperFormat(invoice.business.paper_size as any);
       }
       // Load installed printers
-      if (window.electronAPI) {
-        window.electronAPI
-          .getInstalledPrinters()
-          .then((list) => {
-            setPrinters(list || []);
-            const defaultP = list?.find((p) => p.isDefault);
-            if (defaultP) setSelectedPrinter(defaultP.name);
-          })
-          .catch(console.error);
-      }
+      settingsApi
+        .getInstalledPrinters()
+        .then((list) => {
+          setPrinters(list || []);
+          const defaultP = list?.find((p) => p.isDefault);
+          if (defaultP) setSelectedPrinter(defaultP.name);
+        })
+        .catch(console.error);
       setFeedback(null);
     }
   }, [isOpen, invoice]);
@@ -76,21 +75,17 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
       setFeedback(null);
 
       const htmlContent = getPrintHtml();
-      if (window.electronAPI) {
-        const result = await window.electronAPI.printInvoice({
-          printerName: selectedPrinter || undefined,
-          silent: isSilent,
-          paperFormat,
-          htmlContent,
-        });
+      const result = await settingsApi.printInvoice({
+        printerName: selectedPrinter || undefined,
+        silent: isSilent,
+        paperSize: paperFormat,
+        htmlContent,
+      });
 
-        if (result.success) {
-          setFeedback({ type: 'success', message: result.message || 'Invoice printed successfully!' });
-        } else {
-          setFeedback({ type: 'error', message: result.message || 'Failed to print invoice.' });
-        }
+      if (result.success) {
+        setFeedback({ type: 'success', message: result.message || 'Invoice printed successfully!' });
       } else {
-        window.print();
+        setFeedback({ type: 'error', message: result.message || 'Failed to print invoice.' });
       }
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Printing error.' });
@@ -105,20 +100,18 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
       setFeedback(null);
 
       const htmlContent = getPrintHtml();
-      const defaultFileName = `Invoice_${invoice.invoice_number.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+      const defaultFilename = `Invoice_${invoice.invoice_number.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
 
-      if (window.electronAPI) {
-        const result = await window.electronAPI.exportPDF({
-          htmlContent,
-          paperFormat,
-          defaultFileName,
-        });
+      const result = await settingsApi.exportPDF({
+        htmlContent,
+        paperSize: paperFormat,
+        defaultFilename,
+      });
 
-        if (result.success) {
-          setFeedback({ type: 'success', message: `PDF saved successfully at: ${result.filePath}` });
-        } else {
-          setFeedback({ type: 'error', message: result.message || 'PDF export cancelled or failed.' });
-        }
+      if (result.success) {
+        setFeedback({ type: 'success', message: `PDF saved successfully at: ${result.filePath || 'Downloads'}` });
+      } else {
+        setFeedback({ type: 'error', message: 'PDF export cancelled or failed.' });
       }
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Failed to export PDF.' });

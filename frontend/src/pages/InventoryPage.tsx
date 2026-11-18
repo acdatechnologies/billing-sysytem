@@ -468,14 +468,6 @@ export const InventoryPage: React.FC = () => {
                 <option value="OUT">Out of Stock Only</option>
                 <option value="HEALTHY">In Stock (Healthy)</option>
               </select>
-
-              <button
-                onClick={fetchInventoryData}
-                className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600"
-                title="Refresh Stock"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-600' : ''}`} />
-              </button>
             </div>
           </div>
 
