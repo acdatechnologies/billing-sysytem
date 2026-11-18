@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-electron/
+release/
+.vite/
+*.log
+.env
+.env.local
+userData/
+*.db
+*.db-journal
