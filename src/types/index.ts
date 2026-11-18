@@ -104,6 +104,36 @@ export interface StockAdjustmentInput {
   notes?: string;
 }
 
+export interface Customer {
+  id: string;
+  business_id: string;
+  name: string;
+  mobile: string;
+  email?: string;
+  address?: string;
+  gstin?: string;
+  state?: string;
+  state_code?: string;
+  total_purchases: number;
+  total_bills: number;
+  last_purchase_date?: string;
+  whatsapp_consent: number;
+  created_at: string;
+  updated_at: string;
+  invoices?: Invoice[];
+}
+
+export interface CustomerInput {
+  name: string;
+  mobile: string;
+  email?: string;
+  address?: string;
+  gstin?: string;
+  state?: string;
+  state_code?: string;
+  whatsapp_consent?: number;
+}
+
 export interface InvoiceItem {
   id: string;
   invoice_id: string;
@@ -161,6 +191,19 @@ export interface Invoice {
   items?: InvoiceItem[];
   payments?: any[];
   business?: BusinessInfo;
+}
+
+export interface WhatsAppLog {
+  id: string;
+  business_id: string;
+  customer_id?: string;
+  customer_name?: string;
+  invoice_id?: string;
+  invoice_number?: string;
+  mobile: string;
+  message_text: string;
+  status: string;
+  sent_at: string;
 }
 
 export interface LowStockProduct {
@@ -235,7 +278,16 @@ export interface ElectronAPI {
   cancelInvoice: (id: string, reason: string) => Promise<Invoice>;
 
   // Customers
-  getCustomers: () => Promise<any[]>;
+  getCustomers: (filter?: any) => Promise<Customer[]>;
+  getCustomerById: (id: string) => Promise<Customer>;
+  createCustomer: (input: CustomerInput) => Promise<Customer>;
+  updateCustomer: (id: string, input: Partial<CustomerInput>) => Promise<Customer>;
+  deleteCustomer: (id: string) => Promise<{ success: boolean }>;
+
+  // WhatsApp
+  openWhatsApp: (input: { mobile: string; message: string; customerId?: string; invoiceId?: string }) =>
+    Promise<{ success: boolean; url: string }>;
+  getWhatsAppLogs: (limit?: number) => Promise<WhatsAppLog[]>;
 }
 
 declare global {

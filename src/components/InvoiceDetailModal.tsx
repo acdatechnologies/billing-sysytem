@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Printer, Download, Share2, AlertTriangle, CheckCircle, Ban } from 'lucide-react';
+import { X, Printer, Download, Share2, AlertTriangle, CheckCircle, Ban, MessageCircle } from 'lucide-react';
 import { Invoice } from '../types';
 
 interface InvoiceDetailModalProps {
@@ -32,6 +32,28 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleShareWhatsApp = async () => {
+    if (!invoice.customer_mobile) {
+      alert('This invoice does not have a customer mobile number.');
+      return;
+    }
+    const bizName = invoice.business?.name || 'VND Tech Enterprises';
+    const message = `Hello ${invoice.customer_name},\n\nThank you for shopping with ${bizName}.\n\nYour invoice #${invoice.invoice_number} for ₹${invoice.grand_total.toFixed(2)} is ready.\n\nThank you for your business!\n${bizName}\nContact: 88255 08237`;
+
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.openWhatsApp({
+          mobile: invoice.customer_mobile,
+          message,
+          customerId: invoice.customer_id,
+          invoiceId: invoice.id,
+        });
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to open WhatsApp');
+    }
   };
 
   const handleConfirmCancel = () => {
@@ -70,6 +92,16 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
               <Printer className="w-3.5 h-3.5" />
               <span>Print Invoice</span>
             </button>
+
+            {invoice.customer_mobile && (
+              <button
+                onClick={handleShareWhatsApp}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
+              </button>
+            )}
 
             {!isCancelled && onCancelInvoice && (
               <button

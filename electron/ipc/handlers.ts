@@ -1,4 +1,4 @@
-import { ipcMain, app } from 'electron';
+import { ipcMain, app, shell } from 'electron';
 import Database from 'better-sqlite3';
 import { getDashboardMetrics } from '../database/repositories/dashboardRepo';
 import { getDatabasePath } from '../database/db';
@@ -28,6 +28,17 @@ import {
   CreateInvoiceInput,
   InvoiceFilter,
 } from '../database/repositories/invoiceRepo';
+import {
+  listCustomers,
+  getCustomerById,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  logWhatsAppMessage,
+  getWhatsAppLogs,
+  CustomerFilter,
+  CustomerInput,
+} from '../database/repositories/customerRepo';
 
 export function registerIpcHandlers(db: Database.Database) {
   // App & System info
@@ -205,8 +216,88 @@ export function registerIpcHandlers(db: Database.Database) {
     }
   });
 
-  // Customers preview
-  ipcMain.handle('customers:list', async () => {
-    return db.prepare('SELECT * FROM customers ORDER BY name ASC').all();
+  // Customer Management
+  ipcMain.handle('customers:list', async (_, filter?: CustomerFilter) => {
+    try {
+      return listCustomers(db, filter);
+    } catch (err: any) {
+      console.error('[IPC] Error in customers:list:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('customers:getById', async (_, id: string) => {
+    try {
+      return getCustomerById(db, id);
+    } catch (err: any) {
+      console.error('[IPC] Error in customers:getById:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('customers:create', async (_, input: CustomerInput) => {
+    try {
+      return createCustomer(db, input);
+    } catch (err: any) {
+      console.error('[IPC] Error in customers:create:', err);
+      throw new Error(err.message || 'Failed to add customer');
+    }
+  });
+
+  ipcMain.handle('customers:update', async (_, id: string, input: Partial<CustomerInput>) => {
+    try {
+      return updateCustomer(db, id, input);
+    } catch (err: any) {
+      console.error('[IPC] Error in customers:update:', err);
+      throw new Error(err.message || 'Failed to update customer');
+    }
+  });
+
+  ipcMain.handle('customers:delete', async (_, id: string) => {
+    try {
+      return deleteCustomer(db, id);
+    } catch (err: any) {
+      console.error('[IPC] Error in customers:delete:', err);
+      throw new Error(err.message || 'Failed to delete customer');
+    }
+  });
+
+  // WhatsApp Integration
+  ipcMain.handle('whatsapp:openChat', async (_, input: { mobile: string; message: string; customerId?: string; invoiceId?: string }) => {
+    try {
+      const cleanPhone = input.mobile.replace(/[^0-9]/g, '');
+      const formattedPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12
+        ? cleanPhone
+        : `91${cleanPhone}`;
+
+      const encodedMessage = encodeURIComponent(input.message);
+      const url = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+
+      // Open in default web browser or desktop WhatsApp client
+      await shell.openExternal(url);
+
+      // Log dispatch
+      logWhatsAppMessage(db, {
+        customerId: input.customerId,
+        invoiceId: input.invoiceId,
+        mobile: formattedPhone,
+        messageText: input.message,
+        status: 'OPENED',
+      });
+
+      return { success: true, url };
+    } catch (err: any) {
+      console.error('[IPC] Error in whatsapp:openChat:', err);
+      throw new Error(err.message || 'Failed to open WhatsApp');
+    }
+  });
+
+  ipcMain.handle('whatsapp:getLogs', async (_, limit?: number) => {
+    try {
+      return getWhatsAppLogs(db, limit);
+    } catch (err: any) {
+      console.error('[IPC] Error in whatsapp:getLogs:', err);
+      throw err;
+    }
   });
 }

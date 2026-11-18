@@ -30,7 +30,16 @@ export const electronAPI = {
   cancelInvoice: (id: string, reason: string) => ipcRenderer.invoke('invoices:cancel', id, reason),
 
   // Customers
-  getCustomers: () => ipcRenderer.invoke('customers:list'),
+  getCustomers: (filter?: any) => ipcRenderer.invoke('customers:list', filter),
+  getCustomerById: (id: string) => ipcRenderer.invoke('customers:getById', id),
+  createCustomer: (input: any) => ipcRenderer.invoke('customers:create', input),
+  updateCustomer: (id: string, input: any) => ipcRenderer.invoke('customers:update', id, input),
+  deleteCustomer: (id: string) => ipcRenderer.invoke('customers:delete', id),
+
+  // WhatsApp Integration
+  openWhatsApp: (input: { mobile: string; message: string; customerId?: string; invoiceId?: string }) =>
+    ipcRenderer.invoke('whatsapp:openChat', input),
+  getWhatsAppLogs: (limit?: number) => ipcRenderer.invoke('whatsapp:getLogs', limit),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
