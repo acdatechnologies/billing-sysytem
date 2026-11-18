@@ -17,6 +17,8 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { BusinessInfo, PrinterDevice, SyncStatus } from '../types';
+import { settingsApi } from '../api/settingsApi';
+import { syncApi } from '../api/syncApi';
 
 interface SettingsPageProps {
   businessInfo?: BusinessInfo;

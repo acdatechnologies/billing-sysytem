@@ -12,15 +12,24 @@ export interface ProductInput {
   code: string;
   barcode?: string;
   categoryId?: string;
+  category_id?: string;
   unit?: string;
   purchasePrice?: number;
-  sellingPrice: number;
+  purchase_price?: number;
+  sellingPrice?: number;
+  selling_price?: number;
   openingStock?: number;
+  opening_stock?: number;
   currentStock?: number;
+  current_stock?: number;
   minimumStock?: number;
+  minimum_stock?: number;
   gstRate?: number;
+  gst_rate?: number;
   hsnCode?: string;
+  hsn_code?: string;
   isActive?: number;
+  is_active?: number;
 }
 
 export const productApi = {

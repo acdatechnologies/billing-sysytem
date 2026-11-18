@@ -6,11 +6,12 @@ import {
   updateCustomer,
   deleteCustomer,
 } from '../controllers/customerController.js';
+import { validateCustomerBody } from '../middleware/validate.js';
 
 export const customerRouter = express.Router();
 
 customerRouter.get('/', listCustomers);
 customerRouter.get('/:id', getCustomerById);
-customerRouter.post('/', createCustomer);
-customerRouter.put('/:id', updateCustomer);
+customerRouter.post('/', validateCustomerBody, createCustomer);
+customerRouter.put('/:id', validateCustomerBody, updateCustomer);
 customerRouter.delete('/:id', deleteCustomer);

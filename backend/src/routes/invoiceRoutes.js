@@ -6,11 +6,12 @@ import {
   createInvoice,
   cancelInvoice,
 } from '../controllers/invoiceController.js';
+import { validateInvoiceBody } from '../middleware/validate.js';
 
 export const invoiceRouter = express.Router();
 
 invoiceRouter.get('/next-number', getNextInvoiceNumber);
 invoiceRouter.get('/', listInvoices);
 invoiceRouter.get('/:id', getInvoiceById);
-invoiceRouter.post('/', createInvoice);
+invoiceRouter.post('/', validateInvoiceBody, createInvoice);
 invoiceRouter.post('/:id/cancel', cancelInvoice);

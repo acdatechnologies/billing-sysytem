@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Boxes, PlusCircle, MinusCircle, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Product, StockAdjustmentInput } from '../types';
+import { inventoryApi } from '../api/inventoryApi';
+import { validateStockAdjustment } from '../utils/validators';
 
 interface StockAdjustmentModalProps {
   isOpen: boolean;
@@ -50,31 +52,32 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
     e.preventDefault();
     setError(null);
 
-    if (numQty < 0) {
-      setError('Quantity cannot be negative.');
-      return;
-    }
-    if ((movementType === 'RESTOCK' || movementType === 'RETURN' || movementType === 'DAMAGE') && numQty <= 0) {
-      setError('Please enter a quantity greater than zero.');
-      return;
-    }
-    if (movementType === 'DAMAGE' && numQty > currentStock) {
-      setError(`Cannot deduct ${numQty} units. Only ${currentStock} units available.`);
+    const mappedType = movementType === 'CORRECTION' ? 'AUDIT_CORRECTION' : movementType;
+
+    const validation = validateStockAdjustment({
+      productId: product.id,
+      movementType: mappedType,
+      quantity: numQty,
+      currentStock,
+      notes: notes.trim(),
+    });
+
+    if (!validation.isValid) {
+      setError(Object.values(validation.errors)[0]);
       return;
     }
 
     try {
       setIsSubmitting(true);
-      if (window.electronAPI) {
-        await window.electronAPI.adjustStock({
-          productId: product.id,
-          movementType,
-          quantity: numQty,
-          notes: notes.trim() || undefined,
-        });
-        onSaved();
-        onClose();
-      }
+      await inventoryApi.adjustStock({
+        productId: product.id,
+        movementType: mappedType as any,
+        quantity: numQty,
+        reason: mappedType,
+        notes: notes.trim() || undefined,
+      });
+      onSaved();
+      onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to adjust stock');
     } finally {

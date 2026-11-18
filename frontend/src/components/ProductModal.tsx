@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Sparkles, FolderPlus, AlertCircle } from 'lucide-react';
 import { Product, ProductInput, ProductCategory } from '../types';
+import { productApi } from '../api/productApi';
+import { validateProduct } from '../utils/validators';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -91,18 +93,21 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     setFormData((prev) => ({ ...prev, code: `${prefix}-${randomSuffix}` }));
   };
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
+    if (!newCatName.trim()) {
+      setCatError('Category name is required.');
+      return;
+    }
     try {
-      if (window.electronAPI) {
-        const created = await window.electronAPI.createCategory(newCatName.trim());
-        onCategoryCreated(created);
-        setFormData((prev) => ({ ...prev, category_id: created.id }));
-        setNewCatName('');
-        setShowAddCategory(false);
-        setCatError(null);
-      }
+      const created = await productApi.createCategory(newCatName.trim());
+      onCategoryCreated(created);
+      setFormData((prev) => ({ ...prev, category_id: created.id }));
+      setNewCatName('');
+      setShowAddCategory(false);
+      setCatError(null);
     } catch (err: any) {
       setCatError(err.message || 'Failed to create category');
     }
@@ -111,31 +116,34 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
-    if (!formData.name.trim()) {
-      setError('Product Name is required.');
-      return;
-    }
-    if (!formData.code.trim()) {
-      setError('Product Code is required.');
-      return;
-    }
-    if (Number(formData.selling_price) < 0) {
-      setError('Selling price cannot be negative.');
+    const validation = validateProduct({
+      name: formData.name,
+      code: formData.code,
+      selling_price: formData.selling_price,
+      purchase_price: formData.purchase_price,
+      current_stock: formData.opening_stock,
+      minimum_stock: formData.minimum_stock,
+      gst_rate: formData.gst_rate,
+      hsn_code: formData.hsn_code,
+    });
+
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      setError(Object.values(validation.errors)[0]);
       return;
     }
 
     try {
       setIsSubmitting(true);
-      if (window.electronAPI) {
-        if (isEditing && productToEdit) {
-          await window.electronAPI.updateProduct(productToEdit.id, formData);
-        } else {
-          await window.electronAPI.createProduct(formData);
-        }
-        onSaved();
-        onClose();
+      if (isEditing && productToEdit) {
+        await productApi.updateProduct(productToEdit.id, formData as any);
+      } else {
+        await productApi.createProduct(formData as any);
       }
+      onSaved();
+      onClose();
     } catch (err: any) {
       setError(err.message || 'Error saving product');
     } finally {

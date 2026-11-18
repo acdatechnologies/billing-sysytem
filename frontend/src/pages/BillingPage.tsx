@@ -24,6 +24,10 @@ import {
   LineItemCalculationResult,
 } from '../utils/financialMath';
 import { InvoiceDetailModal } from '../components/InvoiceDetailModal';
+import { invoiceApi } from '../api/invoiceApi';
+import { productApi } from '../api/productApi';
+import { customerApi } from '../api/customerApi';
+import { validateInvoice } from '../utils/validators';
 
 interface CartLineItem {
   product: Product;
@@ -76,16 +80,14 @@ export const BillingPage: React.FC = () => {
   // Fetch initial data: Next invoice number, products, customers
   const fetchInitialData = useCallback(async () => {
     try {
-      if (window.electronAPI) {
-        const [nextNum, prodList, custList] = await Promise.all([
-          window.electronAPI.getNextInvoiceNumber(),
-          window.electronAPI.getProducts({ isActiveOnly: true }),
-          window.electronAPI.getCustomers(),
-        ]);
-        if (nextNum) setInvoiceNumber(nextNum);
-        if (prodList) setProducts(prodList);
-        if (custList) setCustomers(custList);
-      }
+      const [nextNum, prodList, custList] = await Promise.all([
+        invoiceApi.getNextInvoiceNumber(),
+        productApi.getProducts({ stockStatus: 'ALL' }),
+        customerApi.getCustomers(),
+      ]);
+      if (nextNum) setInvoiceNumber(nextNum);
+      if (prodList) setProducts(prodList);
+      if (custList) setCustomers(custList);
     } catch (err) {
       console.error('[BillingPage] Error fetching initial billing data:', err);
     }
@@ -291,15 +293,27 @@ export const BillingPage: React.FC = () => {
     setErrorMessage(null);
   };
 
-  // Submit Invoice to SQLite
+  // Submit Invoice
   const handleFinalizeInvoice = async () => {
     setErrorMessage(null);
-    if (cart.length === 0) {
-      setErrorMessage('Please add at least one product to the invoice.');
-      return;
-    }
-    if (!customerName.trim()) {
-      setErrorMessage('Customer name is required.');
+
+    const validation = validateInvoice({
+      items: cart.map((item) => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+      customerName,
+      customerMobile,
+      customerGstin,
+      paymentMethod,
+      amountReceived: Number(amountReceived) || 0,
+      grandTotal: totals.grandTotal,
+    });
+
+    if (!validation.isValid) {
+      setErrorMessage(Object.values(validation.errors)[0]);
       return;
     }
 
@@ -357,23 +371,21 @@ export const BillingPage: React.FC = () => {
         notes: notes.trim() || undefined,
       };
 
-      if (window.electronAPI) {
-        const createdInvoice = await window.electronAPI.createInvoice(payload);
-        setSavedInvoice(createdInvoice);
-        setIsInvoiceModalOpen(true);
+      const createdInvoice = await invoiceApi.createInvoice(payload);
+      setSavedInvoice(createdInvoice);
+      setIsInvoiceModalOpen(true);
 
-        // Reset form for next billing and fetch next invoice number
-        setCart([]);
-        setCustomerName('Walk-in Customer');
-        setSelectedCustomerId('');
-        setCustomerMobile('');
-        setCustomerGstin('');
-        setInvoiceDiscountPercent(0);
-        setInvoiceDiscountAmount(0);
-        setAmountReceived(0);
-        setNotes('');
-        fetchInitialData();
-      }
+      // Reset form for next billing and fetch next invoice number
+      setCart([]);
+      setCustomerName('Walk-in Customer');
+      setSelectedCustomerId('');
+      setCustomerMobile('');
+      setCustomerGstin('');
+      setInvoiceDiscountPercent(0);
+      setInvoiceDiscountAmount(0);
+      setAmountReceived(0);
+      setNotes('');
+      fetchInitialData();
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to save invoice.');
     } finally {

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, Phone, Mail, MapPin, ShieldCheck, AlertCircle } from 'lucide-react';
 import { Customer, CustomerInput } from '../types';
+import { customerApi } from '../api/customerApi';
+import { validateCustomer } from '../utils/validators';
 
 interface CustomerModalProps {
   isOpen: boolean;
@@ -60,31 +62,35 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
 
   if (!isOpen) return null;
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
-    if (!formData.name.trim()) {
-      setError('Customer name is required.');
-      return;
-    }
-    const cleanMobile = formData.mobile.replace(/[^0-9]/g, '');
-    if (!cleanMobile || cleanMobile.length < 10) {
-      setError('A valid 10-digit mobile number is required.');
+    const validation = validateCustomer({
+      name: formData.name,
+      mobile: formData.mobile,
+      email: formData.email,
+      gstin: formData.gstin,
+    });
+
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      setError(Object.values(validation.errors)[0]);
       return;
     }
 
     try {
       setIsSubmitting(true);
-      if (window.electronAPI) {
-        if (isEditing && customerToEdit) {
-          await window.electronAPI.updateCustomer(customerToEdit.id, formData);
-        } else {
-          await window.electronAPI.createCustomer(formData);
-        }
-        onSaved();
-        onClose();
+      if (isEditing && customerToEdit) {
+        await customerApi.updateCustomer(customerToEdit.id, formData);
+      } else {
+        await customerApi.createCustomer(formData);
       }
+      onSaved();
+      onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to save customer');
     } finally {

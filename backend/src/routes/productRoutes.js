@@ -8,6 +8,7 @@ import {
   listCategories,
   createCategory,
 } from '../controllers/productController.js';
+import { validateProductBody } from '../middleware/validate.js';
 
 export const productRouter = express.Router();
 
@@ -18,6 +19,6 @@ productRouter.post('/categories', createCategory);
 // Products CRUD
 productRouter.get('/', listProducts);
 productRouter.get('/:id', getProductById);
-productRouter.post('/', createProduct);
-productRouter.put('/:id', updateProduct);
+productRouter.post('/', validateProductBody, createProduct);
+productRouter.put('/:id', validateProductBody, updateProduct);
 productRouter.delete('/:id', deleteProduct);

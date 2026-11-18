@@ -11,6 +11,8 @@ import { BillHistoryPage } from './pages/BillHistoryPage';
 import { SalesReportsPage } from './pages/SalesReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NavigationTab, DashboardMetrics, BusinessInfo } from './types';
+import { dashboardApi } from './api/dashboardApi';
+import { settingsApi } from './api/settingsApi';
 
 const defaultMetrics: DashboardMetrics = {
   todaySales: 0,
@@ -44,20 +46,18 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Fetch live metrics and business information from local SQLite
+  // Fetch live metrics and business information
   const loadData = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      if (window.electronAPI) {
-        const [dashMetrics, bizInfo] = await Promise.all([
-          window.electronAPI.getDashboardMetrics(),
-          window.electronAPI.getBusinessInfo(),
-        ]);
-        if (dashMetrics) setMetrics(dashMetrics);
-        if (bizInfo) setBusinessInfo(bizInfo);
-      }
+      const [dashMetrics, bizInfo] = await Promise.all([
+        dashboardApi.getDashboardMetrics(),
+        settingsApi.getBusinessInfo(),
+      ]);
+      if (dashMetrics) setMetrics(dashMetrics);
+      if (bizInfo) setBusinessInfo(bizInfo || undefined);
     } catch (error) {
-      console.error('[App] Failed to load data from SQLite:', error);
+      console.error('[App] Failed to load data:', error);
     } finally {
       setIsRefreshing(false);
     }
