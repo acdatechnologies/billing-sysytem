@@ -19,6 +19,15 @@ import {
   getInventorySummary,
   StockAdjustmentInput,
 } from '../database/repositories/inventoryRepo';
+import {
+  getNextInvoiceNumber,
+  createInvoice,
+  cancelInvoice,
+  listInvoices,
+  getInvoiceById,
+  CreateInvoiceInput,
+  InvoiceFilter,
+} from '../database/repositories/invoiceRepo';
 
 export function registerIpcHandlers(db: Database.Database) {
   // App & System info
@@ -147,6 +156,52 @@ export function registerIpcHandlers(db: Database.Database) {
     } catch (err: any) {
       console.error('[IPC] Error in inventory:getSummary:', err);
       throw err;
+    }
+  });
+
+  // Invoices & Billing
+  ipcMain.handle('invoices:getNextNumber', async () => {
+    try {
+      return getNextInvoiceNumber(db);
+    } catch (err: any) {
+      console.error('[IPC] Error in invoices:getNextNumber:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('invoices:create', async (_, input: CreateInvoiceInput) => {
+    try {
+      return createInvoice(db, input);
+    } catch (err: any) {
+      console.error('[IPC] Error in invoices:create:', err);
+      throw new Error(err.message || 'Failed to generate invoice');
+    }
+  });
+
+  ipcMain.handle('invoices:list', async (_, filter?: InvoiceFilter) => {
+    try {
+      return listInvoices(db, filter);
+    } catch (err: any) {
+      console.error('[IPC] Error in invoices:list:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('invoices:getById', async (_, id: string) => {
+    try {
+      return getInvoiceById(db, id);
+    } catch (err: any) {
+      console.error('[IPC] Error in invoices:getById:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('invoices:cancel', async (_, id: string, reason: string) => {
+    try {
+      return cancelInvoice(db, id, reason);
+    } catch (err: any) {
+      console.error('[IPC] Error in invoices:cancel:', err);
+      throw new Error(err.message || 'Failed to cancel invoice');
     }
   });
 

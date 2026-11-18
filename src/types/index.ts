@@ -104,6 +104,65 @@ export interface StockAdjustmentInput {
   notes?: string;
 }
 
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  product_id: string;
+  product_name: string;
+  product_code: string;
+  hsn_code?: string;
+  unit: string;
+  quantity: number;
+  unit_price: number;
+  discount_percent: number;
+  discount_amount: number;
+  taxable_value: number;
+  gst_rate: number;
+  cgst_rate: number;
+  cgst_amount: number;
+  sgst_rate: number;
+  sgst_amount: number;
+  igst_rate: number;
+  igst_amount: number;
+  total_amount: number;
+  created_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  business_id: string;
+  invoice_number: string;
+  invoice_date: string;
+  invoice_time: string;
+  customer_id?: string;
+  customer_name: string;
+  customer_mobile?: string;
+  customer_gstin?: string;
+  is_interstate: number;
+  subtotal: number;
+  item_discount_total: number;
+  invoice_discount_total: number;
+  taxable_amount: number;
+  cgst_total: number;
+  sgst_total: number;
+  igst_total: number;
+  grand_total: number;
+  round_off: number;
+  amount_received: number;
+  balance_due: number;
+  payment_method: string;
+  payment_status: 'PAID' | 'PARTIAL' | 'UNPAID';
+  status: 'ACTIVE' | 'CANCELLED';
+  notes?: string;
+  cancellation_reason?: string;
+  cancelled_at?: string;
+  created_at: string;
+  updated_at: string;
+  items?: InvoiceItem[];
+  payments?: any[];
+  business?: BusinessInfo;
+}
+
 export interface LowStockProduct {
   id: string;
   name: string;
@@ -167,6 +226,13 @@ export interface ElectronAPI {
   adjustStock: (input: StockAdjustmentInput) => Promise<any>;
   getStockMovements: (productId?: string, limit?: number) => Promise<StockMovement[]>;
   getInventorySummary: () => Promise<InventorySummary>;
+
+  // Invoices & Billing
+  getNextInvoiceNumber: () => Promise<string>;
+  createInvoice: (input: any) => Promise<Invoice>;
+  getInvoices: (filter?: any) => Promise<Invoice[]>;
+  getInvoiceById: (id: string) => Promise<Invoice>;
+  cancelInvoice: (id: string, reason: string) => Promise<Invoice>;
 
   // Customers
   getCustomers: () => Promise<any[]>;

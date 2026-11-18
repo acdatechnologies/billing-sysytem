@@ -22,6 +22,13 @@ export const electronAPI = {
   getStockMovements: (productId?: string, limit?: number) => ipcRenderer.invoke('inventory:getMovements', productId, limit),
   getInventorySummary: () => ipcRenderer.invoke('inventory:getSummary'),
 
+  // Invoices & Billing
+  getNextInvoiceNumber: () => ipcRenderer.invoke('invoices:getNextNumber'),
+  createInvoice: (input: any) => ipcRenderer.invoke('invoices:create', input),
+  getInvoices: (filter?: any) => ipcRenderer.invoke('invoices:list', filter),
+  getInvoiceById: (id: string) => ipcRenderer.invoke('invoices:getById', id),
+  cancelInvoice: (id: string, reason: string) => ipcRenderer.invoke('invoices:cancel', id, reason),
+
   // Customers
   getCustomers: () => ipcRenderer.invoke('customers:list'),
 };
