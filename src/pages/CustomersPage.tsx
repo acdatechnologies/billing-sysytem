@@ -214,22 +214,20 @@ export const CustomersPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           <button
             onClick={() => setConsentOnly(!consentOnly)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-              consentOnly
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${consentOnly
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
           >
             WhatsApp Opted-In Only
           </button>
 
           <button
             onClick={() => setRepeatOnly(!repeatOnly)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-              repeatOnly
-                ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${repeatOnly
+              ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
+              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
           >
             Repeat Buyers (2+ Bills)
           </button>

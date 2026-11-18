@@ -24,8 +24,17 @@ export interface BusinessInfo {
   default_gst_rate?: number;
   default_payment_method?: string;
   paper_size?: string;
+  default_printer?: string;
   invoice_footer?: string;
   terms_and_conditions?: string;
+}
+
+export interface PrinterDevice {
+  name: string;
+  displayName: string;
+  description: string;
+  isDefault: boolean;
+  status: number;
 }
 
 export interface ProductCategory {
@@ -252,6 +261,7 @@ export interface ElectronAPI {
   ping: () => Promise<{ status: string; timestamp: string }>;
   getAppInfo: () => Promise<{ version: string; name: string; databasePath: string; isPackaged: boolean; platform: string }>;
   getBusinessInfo: () => Promise<BusinessInfo>;
+  savePrinterSettings: (input: { paperSize: string; defaultPrinter?: string }) => Promise<{ success: boolean }>;
   getDashboardMetrics: () => Promise<DashboardMetrics>;
 
   // Products
@@ -288,6 +298,11 @@ export interface ElectronAPI {
   openWhatsApp: (input: { mobile: string; message: string; customerId?: string; invoiceId?: string }) =>
     Promise<{ success: boolean; url: string }>;
   getWhatsAppLogs: (limit?: number) => Promise<WhatsAppLog[]>;
+
+  // Printers & PDF
+  getInstalledPrinters: () => Promise<PrinterDevice[]>;
+  printInvoice: (options: any) => Promise<{ success: boolean; message: string }>;
+  exportPDF: (input: any) => Promise<{ success: boolean; filePath?: string; message: string }>;
 }
 
 declare global {

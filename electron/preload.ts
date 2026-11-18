@@ -4,6 +4,8 @@ export const electronAPI = {
   ping: () => ipcRenderer.invoke('app:ping'),
   getAppInfo: () => ipcRenderer.invoke('app:getInfo'),
   getBusinessInfo: () => ipcRenderer.invoke('business:getInfo'),
+  savePrinterSettings: (input: { paperSize: string; defaultPrinter?: string }) =>
+    ipcRenderer.invoke('settings:savePrinter', input),
   getDashboardMetrics: () => ipcRenderer.invoke('dashboard:getMetrics'),
 
   // Products
@@ -36,10 +38,15 @@ export const electronAPI = {
   updateCustomer: (id: string, input: any) => ipcRenderer.invoke('customers:update', id, input),
   deleteCustomer: (id: string) => ipcRenderer.invoke('customers:delete', id),
 
-  // WhatsApp Integration
+  // WhatsApp
   openWhatsApp: (input: { mobile: string; message: string; customerId?: string; invoiceId?: string }) =>
     ipcRenderer.invoke('whatsapp:openChat', input),
   getWhatsAppLogs: (limit?: number) => ipcRenderer.invoke('whatsapp:getLogs', limit),
+
+  // Printers & PDF
+  getInstalledPrinters: () => ipcRenderer.invoke('printers:list'),
+  printInvoice: (options: any) => ipcRenderer.invoke('printers:print', options),
+  exportPDF: (input: any) => ipcRenderer.invoke('printers:exportPDF', input),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

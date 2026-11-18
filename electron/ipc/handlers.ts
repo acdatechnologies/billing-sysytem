@@ -1,4 +1,4 @@
-import { ipcMain, app, shell } from 'electron';
+import { ipcMain, app, shell, BrowserWindow } from 'electron';
 import Database from 'better-sqlite3';
 import { getDashboardMetrics } from '../database/repositories/dashboardRepo';
 import { getDatabasePath } from '../database/db';
@@ -39,6 +39,12 @@ import {
   CustomerFilter,
   CustomerInput,
 } from '../database/repositories/customerRepo';
+import {
+  getInstalledPrinters,
+  printHtml,
+  exportToPdfFile,
+  PrintOptions,
+} from '../services/printService';
 
 export function registerIpcHandlers(db: Database.Database) {
   // App & System info
@@ -59,12 +65,22 @@ export function registerIpcHandlers(db: Database.Database) {
   // Business Info & Settings
   ipcMain.handle('business:getInfo', async () => {
     const biz = db.prepare(`
-      SELECT b.*, s.invoice_prefix, s.invoice_counter, s.default_gst_rate, s.default_payment_method, s.paper_size, s.invoice_footer, s.terms_and_conditions
+      SELECT b.*, s.invoice_prefix, s.invoice_counter, s.default_gst_rate, s.default_payment_method, s.paper_size, s.default_printer, s.invoice_footer, s.terms_and_conditions
       FROM businesses b
       LEFT JOIN business_settings s ON b.id = s.business_id
       LIMIT 1
     `).get();
     return biz;
+  });
+
+  ipcMain.handle('settings:savePrinter', async (_, input: { paperSize: string; defaultPrinter?: string }) => {
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE business_settings
+      SET paper_size = ?, default_printer = ?, updated_at = ?
+      WHERE business_id = 'biz_default_001'
+    `).run(input.paperSize, input.defaultPrinter || null, now);
+    return { success: true };
   });
 
   // Dashboard Metrics
@@ -273,10 +289,8 @@ export function registerIpcHandlers(db: Database.Database) {
       const encodedMessage = encodeURIComponent(input.message);
       const url = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
 
-      // Open in default web browser or desktop WhatsApp client
       await shell.openExternal(url);
 
-      // Log dispatch
       logWhatsAppMessage(db, {
         customerId: input.customerId,
         invoiceId: input.invoiceId,
@@ -298,6 +312,33 @@ export function registerIpcHandlers(db: Database.Database) {
     } catch (err: any) {
       console.error('[IPC] Error in whatsapp:getLogs:', err);
       throw err;
+    }
+  });
+
+  // Printer & PDF Services
+  ipcMain.handle('printers:list', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return [];
+    return getInstalledPrinters(win);
+  });
+
+  ipcMain.handle('printers:print', async (_, options: PrintOptions) => {
+    try {
+      return await printHtml(options);
+    } catch (err: any) {
+      console.error('[IPC] Error in printers:print:', err);
+      return { success: false, message: err.message || 'Failed to print invoice' };
+    }
+  });
+
+  ipcMain.handle('printers:exportPDF', async (event, input: { htmlContent: string; paperFormat: any; defaultFileName?: string }) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return { success: false, message: 'Window reference not found' };
+    try {
+      return await exportToPdfFile(win, input.htmlContent, input.paperFormat, input.defaultFileName);
+    } catch (err: any) {
+      console.error('[IPC] Error in printers:exportPDF:', err);
+      return { success: false, message: err.message || 'Failed to export PDF' };
     }
   });
 }
