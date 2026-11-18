@@ -37,6 +37,14 @@ export interface PrinterDevice {
   status: number;
 }
 
+export interface SyncStatus {
+  isConnected: boolean;
+  cloudEmail: string | null;
+  serverUrl: string;
+  pendingCount: number;
+  lastSyncTime: string | null;
+}
+
 export interface ProductCategory {
   id: string;
   name: string;
@@ -303,6 +311,13 @@ export interface ElectronAPI {
   getInstalledPrinters: () => Promise<PrinterDevice[]>;
   printInvoice: (options: any) => Promise<{ success: boolean; message: string }>;
   exportPDF: (input: any) => Promise<{ success: boolean; filePath?: string; message: string }>;
+
+  // Cloud Synchronization Engine
+  getSyncStatus: () => Promise<SyncStatus>;
+  loginCloud: (input: { serverUrl: string; email: string; password: string }) =>
+    Promise<{ success: boolean; business: any; token: string }>;
+  triggerSync: () => Promise<{ success: boolean; pushedCount: number; pulledCount: number; timestamp: string }>;
+  requestCloudBackup: () => Promise<{ success: boolean; message: string; backup: any }>;
 }
 
 declare global {

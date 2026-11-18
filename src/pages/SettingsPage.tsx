@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Settings,
   Building,
@@ -10,8 +10,13 @@ import {
   AlertCircle,
   PlayCircle,
   RefreshCw,
+  UploadCloud,
+  DownloadCloud,
+  Lock,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
-import { BusinessInfo, PrinterDevice } from '../types';
+import { BusinessInfo, PrinterDevice, SyncStatus } from '../types';
 
 interface SettingsPageProps {
   businessInfo?: BusinessInfo;
@@ -25,9 +30,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
   const [paperSize, setPaperSize] = useState<string>('A4');
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
+
+  // Cloud Sync State
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({
+    isConnected: false,
+    cloudEmail: null,
+    serverUrl: 'http://localhost:5000',
+    pendingCount: 0,
+    lastSyncTime: null,
+  });
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isBackingUp, setIsBackingUp] = useState<boolean>(false);
+
+  // Cloud Login Modal
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [loginEmail, setLoginEmail] = useState<string>('');
+  const [loginPassword, setLoginPassword] = useState<string>('');
+  const [loginServerUrl, setLoginServerUrl] = useState<string>('http://localhost:5000');
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     if (window.electronAPI) {
       window.electronAPI.getAppInfo().then(setAppInfo).catch(console.error);
       window.electronAPI
@@ -36,12 +60,22 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
           setPrinters(list || []);
         })
         .catch(console.error);
+      window.electronAPI
+        .getSyncStatus()
+        .then((s) => {
+          if (s) setSyncStatus(s);
+        })
+        .catch(console.error);
     }
     if (businessInfo) {
       if (businessInfo.paper_size) setPaperSize(businessInfo.paper_size);
       if (businessInfo.default_printer) setSelectedPrinter(businessInfo.default_printer);
     }
   }, [businessInfo]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSavePrinterSettings = async () => {
     try {
@@ -105,6 +139,63 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
     }
   };
 
+  // Cloud Sync Handlers
+  const handleTriggerSync = async () => {
+    try {
+      setIsSyncing(true);
+      setFeedback(null);
+      if (window.electronAPI) {
+        const res = await window.electronAPI.triggerSync();
+        setFeedback({
+          type: 'success',
+          message: `Cloud synchronization complete! Pushed ${res.pushedCount} mutations to MongoDB Atlas.`,
+        });
+        loadData();
+      }
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: err.message || 'Cloud synchronization failed.' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleCloudBackup = async () => {
+    try {
+      setIsBackingUp(true);
+      setFeedback(null);
+      if (window.electronAPI) {
+        const res = await window.electronAPI.requestCloudBackup();
+        setFeedback({
+          type: 'success',
+          message: `Cloud backup verified! Backed up ${res.backup?.counts?.invoices || 0} invoices, ${res.backup?.counts?.products || 0} products.`,
+        });
+      }
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: err.message || 'Cloud backup failed.' });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleCloudLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.loginCloud({
+          serverUrl: loginServerUrl,
+          email: loginEmail,
+          password: loginPassword,
+        });
+        setShowLoginModal(false);
+        setFeedback({ type: 'success', message: 'Connected to MongoDB Atlas cloud account successfully!' });
+        loadData();
+      }
+    } catch (err: any) {
+      setLoginError(err.message || 'Authentication failed');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-8">
       {feedback && (
@@ -123,6 +214,102 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
           <span>{feedback.message}</span>
         </div>
       )}
+
+      {/* Cloud Synchronization & MongoDB Atlas Status (Section 14 & 15 Requirement) */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Cloud className="w-4 h-4 text-blue-600" />
+            <h3 className="font-bold text-sm text-slate-800">
+              Cloud Synchronization & MongoDB Atlas
+            </h3>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs">
+            {syncStatus.isConnected ? (
+              <span className="flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <Wifi className="w-3.5 h-3.5" /> Cloud Connected
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                <WifiOff className="w-3.5 h-3.5" /> Offline Standalone Mode
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="p-5 space-y-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+                Cloud Account
+              </span>
+              <div className="font-bold text-slate-800 truncate mt-0.5">
+                {syncStatus.cloudEmail || 'Not Connected'}
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+                Pending Local Sync
+              </span>
+              <div className="font-mono font-bold text-slate-900 mt-0.5">
+                {syncStatus.pendingCount} mutations queued
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+                Last Cloud Synchronization
+              </span>
+              <div className="font-bold text-slate-700 mt-0.5">
+                {syncStatus.lastSyncTime
+                  ? new Date(syncStatus.lastSyncTime).toLocaleTimeString('en-IN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    })
+                  : 'Never Synced'}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            {!syncStatus.isConnected ? (
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs shadow-blue-600/30 transition-all"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Connect Cloud Account</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleTriggerSync}
+                  disabled={isSyncing}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs shadow-blue-600/30 transition-all disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>{isSyncing ? 'Syncing...' : 'Sync with Cloud Now'}</span>
+                </button>
+
+                <button
+                  onClick={handleCloudBackup}
+                  disabled={isBackingUp}
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors disabled:opacity-50"
+                >
+                  <UploadCloud className="w-4 h-4 text-blue-600" />
+                  <span>{isBackingUp ? 'Creating Backup...' : 'Generate Cloud Backup'}</span>
+                </button>
+              </div>
+            )}
+
+            <span className="text-[11px] text-slate-400">
+              Zero cloud credentials stored on desktop client &bull; End-to-End JWT isolated
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Business Details Card */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
@@ -211,9 +398,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                   </option>
                 ))}
               </select>
-              <p className="text-[10px] text-slate-400 mt-1">
-                Physical thermal or laser printer connected to this computer
-              </p>
             </div>
 
             <div>
@@ -230,9 +414,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                 <option value="A4">A4 Full Sheet (Standard Laser/Inkjet)</option>
                 <option value="A5">A5 Half Sheet (Compact Formal Invoice)</option>
               </select>
-              <p className="text-[10px] text-slate-400 mt-1">
-                Default format loaded in New Billing & History printouts
-              </p>
             </div>
           </div>
 
@@ -258,7 +439,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
         </div>
       </div>
 
-      {/* Invoice Branding & Legal Footer (Section 3 Requirement) */}
+      {/* Invoice Branding & Legal Footer */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
           <Settings className="w-4 h-4 text-blue-600" />
@@ -320,6 +501,88 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
           </div>
         </div>
       </div>
+
+      {/* Cloud Account Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Cloud className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm text-slate-800">Connect Cloud Account</h3>
+              </div>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                &times;
+              </button>
+            </div>
+
+            {loginError && (
+              <div className="mb-4 p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-red-700">
+                {loginError}
+              </div>
+            )}
+
+            <form onSubmit={handleCloudLoginSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">Server API URL</label>
+                <input
+                  type="text"
+                  required
+                  value={loginServerUrl}
+                  onChange={(e) => setLoginServerUrl(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800"
+                  placeholder="http://localhost:5000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">Business Account Email</label>
+                <input
+                  type="email"
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800"
+                  placeholder="admin@vndtech.in"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowLoginModal(false)}
+                  className="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs"
+                >
+                  Sign In & Link
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

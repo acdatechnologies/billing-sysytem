@@ -47,6 +47,13 @@ export const electronAPI = {
   getInstalledPrinters: () => ipcRenderer.invoke('printers:list'),
   printInvoice: (options: any) => ipcRenderer.invoke('printers:print', options),
   exportPDF: (input: any) => ipcRenderer.invoke('printers:exportPDF', input),
+
+  // Cloud Synchronization Engine
+  getSyncStatus: () => ipcRenderer.invoke('sync:getStatus'),
+  loginCloud: (input: { serverUrl: string; email: string; password: string }) =>
+    ipcRenderer.invoke('sync:login', input),
+  triggerSync: () => ipcRenderer.invoke('sync:trigger'),
+  requestCloudBackup: () => ipcRenderer.invoke('sync:backup'),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

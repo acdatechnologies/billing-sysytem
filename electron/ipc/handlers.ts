@@ -45,6 +45,12 @@ import {
   exportToPdfFile,
   PrintOptions,
 } from '../services/printService';
+import {
+  getSyncStatus,
+  loginCloud,
+  triggerSync,
+  requestCloudBackup,
+} from '../services/syncService';
 
 export function registerIpcHandlers(db: Database.Database) {
   // App & System info
@@ -339,6 +345,43 @@ export function registerIpcHandlers(db: Database.Database) {
     } catch (err: any) {
       console.error('[IPC] Error in printers:exportPDF:', err);
       return { success: false, message: err.message || 'Failed to export PDF' };
+    }
+  });
+
+  // Cloud Synchronization Engine
+  ipcMain.handle('sync:getStatus', async () => {
+    try {
+      return getSyncStatus(db);
+    } catch (err: any) {
+      console.error('[IPC] Error in sync:getStatus:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('sync:login', async (_, input: { serverUrl: string; email: string; password: string }) => {
+    try {
+      return await loginCloud(db, input.serverUrl, input.email, input.password);
+    } catch (err: any) {
+      console.error('[IPC] Error in sync:login:', err);
+      throw new Error(err.message || 'Cloud login failed');
+    }
+  });
+
+  ipcMain.handle('sync:trigger', async () => {
+    try {
+      return await triggerSync(db);
+    } catch (err: any) {
+      console.error('[IPC] Error in sync:trigger:', err);
+      throw new Error(err.message || 'Cloud sync failed');
+    }
+  });
+
+  ipcMain.handle('sync:backup', async () => {
+    try {
+      return await requestCloudBackup(db);
+    } catch (err: any) {
+      console.error('[IPC] Error in sync:backup:', err);
+      throw new Error(err.message || 'Cloud backup failed');
     }
   });
 }
