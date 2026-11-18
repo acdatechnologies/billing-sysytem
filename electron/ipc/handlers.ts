@@ -2,14 +2,30 @@ import { ipcMain, app } from 'electron';
 import Database from 'better-sqlite3';
 import { getDashboardMetrics } from '../database/repositories/dashboardRepo';
 import { getDatabasePath } from '../database/db';
+import {
+  listProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  listCategories,
+  createCategory,
+  ProductFilter,
+  ProductInput,
+} from '../database/repositories/productRepo';
+import {
+  adjustStock,
+  getStockMovements,
+  getInventorySummary,
+  StockAdjustmentInput,
+} from '../database/repositories/inventoryRepo';
 
 export function registerIpcHandlers(db: Database.Database) {
-  // Health ping
+  // App & System info
   ipcMain.handle('app:ping', async () => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   });
 
-  // App & System info
   ipcMain.handle('app:getInfo', async () => {
     return {
       version: app.getVersion(),
@@ -41,9 +57,97 @@ export function registerIpcHandlers(db: Database.Database) {
     }
   });
 
-  // Products preview (quick list for verification)
-  ipcMain.handle('products:list', async () => {
-    return db.prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY name ASC').all();
+  // Product CRUD
+  ipcMain.handle('products:list', async (_, filter?: ProductFilter) => {
+    try {
+      return listProducts(db, filter);
+    } catch (err: any) {
+      console.error('[IPC] Error in products:list:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('products:getById', async (_, id: string) => {
+    try {
+      return getProductById(db, id);
+    } catch (err: any) {
+      console.error('[IPC] Error in products:getById:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('products:create', async (_, input: ProductInput) => {
+    try {
+      return createProduct(db, input);
+    } catch (err: any) {
+      console.error('[IPC] Error in products:create:', err);
+      throw new Error(err.message || 'Failed to create product');
+    }
+  });
+
+  ipcMain.handle('products:update', async (_, id: string, input: Partial<ProductInput>) => {
+    try {
+      return updateProduct(db, id, input);
+    } catch (err: any) {
+      console.error('[IPC] Error in products:update:', err);
+      throw new Error(err.message || 'Failed to update product');
+    }
+  });
+
+  ipcMain.handle('products:delete', async (_, id: string) => {
+    try {
+      return deleteProduct(db, id);
+    } catch (err: any) {
+      console.error('[IPC] Error in products:delete:', err);
+      throw new Error(err.message || 'Failed to delete product');
+    }
+  });
+
+  // Categories
+  ipcMain.handle('categories:list', async () => {
+    try {
+      return listCategories(db);
+    } catch (err: any) {
+      console.error('[IPC] Error in categories:list:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('categories:create', async (_, name: string, description?: string) => {
+    try {
+      return createCategory(db, name, description);
+    } catch (err: any) {
+      console.error('[IPC] Error in categories:create:', err);
+      throw new Error(err.message || 'Failed to create category');
+    }
+  });
+
+  // Inventory & Stock Management
+  ipcMain.handle('inventory:adjustStock', async (_, input: StockAdjustmentInput) => {
+    try {
+      return adjustStock(db, input);
+    } catch (err: any) {
+      console.error('[IPC] Error in inventory:adjustStock:', err);
+      throw new Error(err.message || 'Failed to adjust stock');
+    }
+  });
+
+  ipcMain.handle('inventory:getMovements', async (_, productId?: string, limit?: number) => {
+    try {
+      return getStockMovements(db, productId, limit);
+    } catch (err: any) {
+      console.error('[IPC] Error in inventory:getMovements:', err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle('inventory:getSummary', async () => {
+    try {
+      return getInventorySummary(db);
+    } catch (err: any) {
+      console.error('[IPC] Error in inventory:getSummary:', err);
+      throw err;
+    }
   });
 
   // Customers preview
