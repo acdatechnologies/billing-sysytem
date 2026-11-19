@@ -104,11 +104,18 @@ export const ProductsPage: React.FC = () => {
   }, [fetchData]);
 
   // Open Add Product View
-  const handleOpenAdd = () => {
+  const handleOpenAdd = async () => {
     setProductToEdit(null);
+    let nextCode = 'PRO01';
+    try {
+      nextCode = await productApi.getNextProductCode();
+    } catch (err) {
+      console.error('[ProductsPage] Failed to get next product code:', err);
+    }
+
     setFormData({
       name: '',
-      code: `PRD-${Math.floor(1000 + Math.random() * 9000)}`,
+      code: nextCode,
       barcode: '',
       category_id: categories.length > 0 ? categories[0].id : '',
       unit: 'PCS',
@@ -354,7 +361,7 @@ export const ProductsPage: React.FC = () => {
                     required
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    placeholder="e.g. PRD-1001"
+                    placeholder="e.g. PRO01"
                     className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
                   />
                 </div>

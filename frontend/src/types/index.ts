@@ -339,6 +339,7 @@ export interface ElectronAPI {
   getDashboardMetrics: () => Promise<DashboardMetrics>;
 
   // Products
+  getNextProductCode: () => Promise<string>;
   getProducts: (filter?: any) => Promise<Product[]>;
   getProductById: (id: string) => Promise<Product>;
   createProduct: (input: ProductInput) => Promise<Product>;

@@ -72,6 +72,26 @@ function formatProduct(doc) {
   };
 }
 
+export async function getNextCode(req, res, next) {
+  try {
+    const businessId = req.businessId || 'default';
+    const products = await Product.find({ businessId }, { code: 1 });
+    let maxNum = 0;
+    for (const p of products) {
+      if (!p.code) continue;
+      const match = p.code.trim().match(/^PRO(\d+)$/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    }
+    const nextCode = `PRO${String(maxNum + 1).padStart(2, '0')}`;
+    res.json({ success: true, code: nextCode });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function listProducts(req, res, next) {
   try {
     const businessId = req.businessId || 'default';

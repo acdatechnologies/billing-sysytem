@@ -7,6 +7,7 @@ import {
   deleteProduct,
   listCategories,
   createCategory,
+  getNextCode,
 } from '../controllers/productController.js';
 import { validateProductBody } from '../middleware/validate.js';
 
@@ -15,6 +16,9 @@ export const productRouter = express.Router();
 // Categories
 productRouter.get('/categories', listCategories);
 productRouter.post('/categories', createCategory);
+
+// Products Next Sequential Code
+productRouter.get('/next-code', getNextCode);
 
 // Products CRUD
 productRouter.get('/', listProducts);

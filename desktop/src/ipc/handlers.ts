@@ -9,6 +9,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  getNextProductCode,
   listCategories,
   createCategory,
   ProductFilter,
@@ -107,6 +108,15 @@ export function registerIpcHandlers(db: Database.Database) {
   });
 
   // Product CRUD
+  ipcMain.handle('products:getNextCode', async () => {
+    try {
+      return getNextProductCode(db);
+    } catch (err: any) {
+      console.error('[IPC] Error in products:getNextCode:', err);
+      return 'PRO01';
+    }
+  });
+
   ipcMain.handle('products:list', async (_, filter?: ProductFilter) => {
     try {
       return listProducts(db, filter);

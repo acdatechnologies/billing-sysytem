@@ -67,7 +67,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     } else {
       setFormData({
         name: '',
-        code: `PRD-${Math.floor(1000 + Math.random() * 9000)}`,
+        code: 'PRO01',
         barcode: '',
         category_id: categories.length > 0 ? categories[0].id : '',
         unit: 'PCS',
@@ -85,12 +85,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   if (!isOpen) return null;
 
-  const generateAutoCode = () => {
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const prefix = formData.name.trim()
-      ? formData.name.trim().slice(0, 3).toUpperCase().replace(/[^A-Z]/g, 'ITM')
-      : 'PRD';
-    setFormData((prev) => ({ ...prev, code: `${prefix}-${randomSuffix}` }));
+  const generateAutoCode = async () => {
+    try {
+      const nextCode = await productApi.getNextProductCode();
+      setFormData((prev) => ({ ...prev, code: nextCode }));
+    } catch {
+      setFormData((prev) => ({ ...prev, code: 'PRO01' }));
+    }
   };
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});

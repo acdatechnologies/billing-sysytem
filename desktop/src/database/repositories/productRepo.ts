@@ -71,11 +71,33 @@ export function getProductById(db: Database.Database, id: string) {
   `).get(id);
 }
 
+export function getNextProductCode(db: Database.Database, businessId = 'biz_default_001'): string {
+  const rows = db.prepare('SELECT code FROM products WHERE business_id = ?').all(businessId) as { code: string }[];
+  let maxNum = 0;
+  for (const r of rows) {
+    if (!r.code) continue;
+    const match = r.code.trim().match(/^PRO(\d+)$/i);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+  const nextNum = maxNum + 1;
+  return `PRO${String(nextNum).padStart(2, '0')}`;
+}
+
 export function createProduct(db: Database.Database, input: ProductInput, businessId = 'biz_default_001') {
+  // If no code provided, auto-generate sequential PRO01, PRO02...
+  const productCode = (input.code && input.code.trim() !== '')
+    ? input.code.trim().toUpperCase()
+    : getNextProductCode(db, businessId);
+
   // Validate unique code
-  const existingCode = db.prepare('SELECT id FROM products WHERE code = ? AND business_id = ?').get(input.code, businessId);
+  const existingCode = db.prepare('SELECT id FROM products WHERE code = ? AND business_id = ?').get(productCode, businessId);
   if (existingCode) {
-    throw new Error(`Product Code "${input.code}" already exists.`);
+    throw new Error(`Product Code "${productCode}" already exists.`);
   }
 
   const id = `prod_${uuidv4().replace(/-/g, '').slice(0, 12)}`;
@@ -103,7 +125,7 @@ export function createProduct(db: Database.Database, input: ProductInput, busine
       id,
       businessId,
       input.name.trim(),
-      input.code.trim().toUpperCase(),
+      productCode,
       input.barcode ? input.barcode.trim() : null,
       input.category_id || null,
       catName,

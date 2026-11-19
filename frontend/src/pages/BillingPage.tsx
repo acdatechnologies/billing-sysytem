@@ -274,6 +274,34 @@ export const BillingPage: React.FC = () => {
     amountReceived,
   });
 
+  // Validation flags for payment amount
+  const isAmountExceeded = totals.grandTotal > 0 && amountReceived > totals.grandTotal;
+  const isAmountNegative = amountReceived < 0;
+
+  const handleAmountReceivedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (raw === '') {
+      setAmountReceived(0);
+      return;
+    }
+    const val = parseFloat(raw);
+    if (isNaN(val)) {
+      setAmountReceived(0);
+      return;
+    }
+    if (val < 0) {
+      setAmountReceived(0);
+      return;
+    }
+    setAmountReceived(val);
+  };
+
+  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['-', '+', 'e', 'E'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   // Automatically update amount received when cart total changes if previously full paid
   const handleQuickPayFull = () => {
     setAmountReceived(totals.grandTotal);
@@ -296,6 +324,18 @@ export const BillingPage: React.FC = () => {
   // Submit Invoice
   const handleFinalizeInvoice = async () => {
     setErrorMessage(null);
+
+    if (amountReceived < 0) {
+      setErrorMessage('Negative values are not allowed (எதிர்மறை எண்கள் அனுமதிக்கப்படாது).');
+      return;
+    }
+
+    if (totals.grandTotal > 0 && amountReceived > totals.grandTotal) {
+      setErrorMessage(
+        `நீங்கள் மொத்த தொகையை (₹${totals.grandTotal.toFixed(2)}) விட அதிகமாக pay பண்ண போறீங்க! Grand total-ஐ விட அதிகமான தொகையை செலுத்த முடியாது.`
+      );
+      return;
+    }
 
     const validation = validateInvoice({
       items: cart.map((item) => ({
@@ -807,11 +847,45 @@ export const BillingPage: React.FC = () => {
                 type="number"
                 step="0.01"
                 min="0"
-                value={amountReceived || ''}
-                onChange={(e) => setAmountReceived(Number(e.target.value))}
+                max={totals.grandTotal > 0 ? totals.grandTotal : undefined}
+                value={amountReceived === 0 ? '' : amountReceived}
+                onChange={handleAmountReceivedChange}
+                onKeyDown={handleAmountKeyDown}
                 placeholder="0.00"
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold text-base font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className={`w-full p-2 rounded-lg font-bold text-base font-mono focus:outline-none transition-colors ${
+                  isAmountExceeded || isAmountNegative
+                    ? 'bg-red-50 border-2 border-red-500 text-red-700 focus:ring-2 focus:ring-red-500/20'
+                    : 'bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-blue-500/20'
+                }`}
               />
+
+              {isAmountExceeded && (
+                <div className="flex items-start gap-1.5 p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs mt-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                  <div className="flex-1">
+                    <span className="font-bold block">
+                      நீங்கள் மொத்த தொகையை விட அதிகமாக pay பண்ண போறீங்க!
+                    </span>
+                    <span className="text-[11px] text-red-600">
+                      அதிகபட்ச தொகை: ₹{totals.grandTotal.toFixed(2)} (Amount cannot exceed Grand Total)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleQuickPayFull}
+                    className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold shrink-0 self-center transition-colors"
+                  >
+                    Set ₹{totals.grandTotal}
+                  </button>
+                </div>
+              )}
+
+              {isAmountNegative && (
+                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs mt-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>Negative values are not allowed (எதிர்மறை எண்கள் அனுமதிக்கப்படாது).</span>
+                </div>
+              )}
             </div>
 
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1.5">
@@ -857,8 +931,8 @@ export const BillingPage: React.FC = () => {
             {/* Finalize Button */}
             <button
               onClick={handleFinalizeInvoice}
-              disabled={isSubmitting || cart.length === 0}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+              disabled={isSubmitting || cart.length === 0 || isAmountExceeded || isAmountNegative}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle2 className="w-5 h-5" />
               <span>{isSubmitting ? 'Finalizing Invoice...' : 'Save & Print Invoice'}</span>

@@ -85,6 +85,41 @@ function formatProductResponse(p: any): Product {
 }
 
 export const productApi = {
+  // Get next sequential product code (PRO01, PRO02, ...)
+  async getNextProductCode(): Promise<string> {
+    const electron = getElectronAPI();
+    if (electron && typeof electron.getNextProductCode === 'function') {
+      try {
+        const code = await electron.getNextProductCode();
+        if (code) return code;
+      } catch (err) {
+        console.error('[productApi] Error fetching next code from electron:', err);
+      }
+    }
+    try {
+      const res = await restRequest<{ code: string }>('/products/next-code');
+      if (res?.code) return res.code;
+    } catch {
+      // ignore
+    }
+    // Fallback: inspect existing products list
+    try {
+      const list = await this.getProducts();
+      let maxNum = 0;
+      for (const p of list) {
+        if (!p.code) continue;
+        const match = p.code.trim().match(/^PRO(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
+        }
+      }
+      return `PRO${String(maxNum + 1).padStart(2, '0')}`;
+    } catch {
+      return 'PRO01';
+    }
+  },
+
   // Get all products with optional filters
   async getProducts(filter?: ProductFilter): Promise<Product[]> {
     const electron = getElectronAPI();

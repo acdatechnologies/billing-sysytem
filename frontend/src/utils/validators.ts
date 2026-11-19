@@ -236,8 +236,12 @@ export function validateInvoice(data: InvoiceValidationInput): ValidationResult 
     errors.paymentMethod = `Invalid payment method. Must be one of: ${validPayments.join(', ')}.`;
   }
 
-  if (data.amountReceived !== undefined && data.amountReceived < 0) {
-    errors.amountReceived = 'Amount received cannot be negative.';
+  if (data.amountReceived !== undefined) {
+    if (data.amountReceived < 0) {
+      errors.amountReceived = 'Negative values are not allowed (எதிர்மறை எண்கள் அனுமதிக்கப்படாது).';
+    } else if (data.grandTotal !== undefined && data.grandTotal > 0 && data.amountReceived > data.grandTotal) {
+      errors.amountReceived = `நீங்கள் மொத்த தொகையை (₹${data.grandTotal}) விட அதிகமாக pay பண்ண போறீங்க!`;
+    }
   }
 
   return {

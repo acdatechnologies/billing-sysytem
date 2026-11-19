@@ -9,6 +9,7 @@ export const electronAPI = {
   getDashboardMetrics: () => ipcRenderer.invoke('dashboard:getMetrics'),
 
   // Products
+  getNextProductCode: () => ipcRenderer.invoke('products:getNextCode'),
   getProducts: (filter?: any) => ipcRenderer.invoke('products:list', filter),
   getProductById: (id: string) => ipcRenderer.invoke('products:getById', id),
   createProduct: (input: any) => ipcRenderer.invoke('products:create', input),
