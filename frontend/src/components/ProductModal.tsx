@@ -13,8 +13,13 @@ interface ProductModalProps {
   onCategoryCreated: (category: ProductCategory) => void;
 }
 
-const COMMON_UNITS = ['PCS', 'BOX', 'KG', 'GM', 'LTR', 'ML', 'MTR', 'SET', 'PKT', 'DOZ'];
+const COMMON_UNITS = ['PCS', 'MTR', 'SET', 'BOX', 'ROLL', 'PKT', 'DOZ'];
 const COMMON_GST_RATES = [0, 5, 12, 18, 28];
+
+const TEXTILE_SIZES = ['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '28', '30', '32', '34', '36', '38', '40', '42', 'Unstitched'];
+const TEXTILE_COLORS = ['White', 'Black', 'Navy Blue', 'Maroon', 'Red', 'Sky Blue', 'Pink', 'Green', 'Yellow', 'Grey', 'Cream', 'Multi'];
+const TEXTILE_FABRICS = ['Cotton', 'Pure Silk (பட்டு)', 'Art Silk', 'Linen', 'Rayon', 'Polyester', 'Denim', 'Georgette', 'Chiffon', 'Banarasi', 'Satin', 'Handloom'];
+const TEXTILE_GENDERS = ["Men's Wear (ஆண்கள்)", "Women's Wear (பெண்கள்)", "Boys (சிறுவர்கள்)", "Girls (சிறுமிகள்)", "Kids / Baby (குழந்தைகள்)", "Unisex", "Home Textiles (வீட்டு உபயோகம்)"];
 
 export const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,
@@ -32,11 +37,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     barcode: '',
     category_id: '',
     unit: 'PCS',
+    size: '',
+    color: '',
+    fabric: '',
+    gender: "Men's Wear (ஆண்கள்)",
+    brand: '',
+    rack_location: '',
     purchase_price: 0,
     selling_price: 0,
     opening_stock: 0,
     minimum_stock: 5,
-    gst_rate: 18,
+    gst_rate: 5,
     hsn_code: '',
   });
 
@@ -57,10 +68,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         barcode: productToEdit.barcode || '',
         category_id: productToEdit.category_id || '',
         unit: productToEdit.unit || 'PCS',
+        size: productToEdit.size || '',
+        color: productToEdit.color || '',
+        fabric: productToEdit.fabric || '',
+        gender: productToEdit.gender || "Men's Wear (ஆண்கள்)",
+        brand: productToEdit.brand || '',
+        rack_location: productToEdit.rack_location || '',
         purchase_price: productToEdit.purchase_price,
         selling_price: productToEdit.selling_price,
         minimum_stock: productToEdit.minimum_stock,
-        gst_rate: productToEdit.gst_rate,
+        gst_rate: productToEdit.gst_rate !== undefined ? productToEdit.gst_rate : 5,
         hsn_code: productToEdit.hsn_code || '',
       });
       setIsCustomGst(!COMMON_GST_RATES.includes(productToEdit.gst_rate));
@@ -71,11 +88,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         barcode: '',
         category_id: categories.length > 0 ? categories[0].id : '',
         unit: 'PCS',
+        size: '',
+        color: '',
+        fabric: '',
+        gender: "Men's Wear (ஆண்கள்)",
+        brand: '',
+        rack_location: '',
         purchase_price: 0,
         selling_price: 0,
         opening_stock: 0,
         minimum_stock: 5,
-        gst_rate: 18,
+        gst_rate: 5,
         hsn_code: '',
       });
       setIsCustomGst(false);

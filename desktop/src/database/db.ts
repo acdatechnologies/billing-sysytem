@@ -87,12 +87,18 @@ function runMigrations(db: Database.Database) {
       category_id TEXT,
       category_name TEXT,
       unit TEXT DEFAULT 'PCS',
+      size TEXT,
+      color TEXT,
+      fabric TEXT,
+      gender TEXT,
+      brand TEXT,
+      rack_location TEXT,
       purchase_price REAL DEFAULT 0,
       selling_price REAL NOT NULL,
       opening_stock REAL DEFAULT 0,
       current_stock REAL DEFAULT 0,
       minimum_stock REAL DEFAULT 5,
-      gst_rate REAL DEFAULT 18.0,
+      gst_rate REAL DEFAULT 5.0,
       hsn_code TEXT,
       is_active INTEGER DEFAULT 1,
       created_at TEXT NOT NULL,
@@ -102,6 +108,8 @@ function runMigrations(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_products_code ON products(code);
     CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
     CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
+    CREATE INDEX IF NOT EXISTS idx_products_size ON products(size);
+    CREATE INDEX IF NOT EXISTS idx_products_color ON products(color);
 
     -- Customers Table
     CREATE TABLE IF NOT EXISTS customers (
@@ -252,6 +260,16 @@ function runMigrations(db: Database.Database) {
       value TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    -- Textile Schema Migrations for existing databases
+    try { db.exec('ALTER TABLE products ADD COLUMN size TEXT;'); } catch (_) {}
+    try { db.exec('ALTER TABLE products ADD COLUMN color TEXT;'); } catch (_) {}
+    try { db.exec('ALTER TABLE products ADD COLUMN fabric TEXT;'); } catch (_) {}
+    try { db.exec('ALTER TABLE products ADD COLUMN gender TEXT;'); } catch (_) {}
+    try { db.exec('ALTER TABLE products ADD COLUMN brand TEXT;'); } catch (_) {}
+    try { db.exec('ALTER TABLE products ADD COLUMN rack_location TEXT;'); } catch (_) {}
+    try { db.exec('CREATE INDEX IF NOT EXISTS idx_products_size ON products(size);'); } catch (_) {}
+    try { db.exec('CREATE INDEX IF NOT EXISTS idx_products_color ON products(color);'); } catch (_) {}
   `);
 }
 

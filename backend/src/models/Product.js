@@ -10,11 +10,17 @@ const productSchema = new mongoose.Schema(
     categoryId: { type: String },
     categoryName: { type: String },
     unit: { type: String, default: 'PCS' },
+    size: { type: String },
+    color: { type: String },
+    fabric: { type: String },
+    gender: { type: String },
+    brand: { type: String },
+    rackLocation: { type: String },
     purchasePrice: { type: Number, default: 0 },
     sellingPrice: { type: Number, required: true },
     currentStock: { type: Number, default: 0 },
     minimumStock: { type: Number, default: 5 },
-    gstRate: { type: Number, default: 18 },
+    gstRate: { type: Number, default: 5 },
     hsnCode: { type: String },
     isActive: { type: Number, default: 1 },
     updatedAtLocal: { type: String, required: true },
@@ -24,6 +30,9 @@ const productSchema = new mongoose.Schema(
 
 // Pre-validate hook to map snake_case to camelCase
 productSchema.pre('validate', function (next) {
+  if (!this.rackLocation && this.get('rack_location')) {
+    this.rackLocation = this.get('rack_location');
+  }
   if (this.sellingPrice === undefined && this.get('selling_price') !== undefined) {
     this.sellingPrice = Number(this.get('selling_price'));
   }

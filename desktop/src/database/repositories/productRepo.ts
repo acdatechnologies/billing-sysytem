@@ -8,6 +8,12 @@ export interface ProductInput {
   category_id?: string;
   category_name?: string;
   unit?: string;
+  size?: string;
+  color?: string;
+  fabric?: string;
+  gender?: string;
+  brand?: string;
+  rack_location?: string;
   purchase_price: number;
   selling_price: number;
   opening_stock?: number;
@@ -22,6 +28,10 @@ export interface ProductFilter {
   search?: string;
   categoryId?: string;
   stockStatus?: 'ALL' | 'LOW' | 'OUT' | 'HEALTHY';
+  size?: string;
+  color?: string;
+  gender?: string;
+  brand?: string;
   isActiveOnly?: boolean;
 }
 
@@ -43,10 +53,25 @@ export function listProducts(db: Database.Database, filter: ProductFilter = {}) 
     params.push(filter.categoryId);
   }
 
+  if (filter.size) {
+    query += ` AND LOWER(p.size) = LOWER(?)`;
+    params.push(filter.size.trim());
+  }
+
+  if (filter.gender) {
+    query += ` AND LOWER(p.gender) = LOWER(?)`;
+    params.push(filter.gender.trim());
+  }
+
+  if (filter.brand) {
+    query += ` AND LOWER(p.brand) = LOWER(?)`;
+    params.push(filter.brand.trim());
+  }
+
   if (filter.search && filter.search.trim() !== '') {
     const s = `%${filter.search.trim()}%`;
-    query += ` AND (p.name LIKE ? OR p.code LIKE ? OR p.barcode LIKE ? OR p.hsn_code LIKE ?)`;
-    params.push(s, s, s, s);
+    query += ` AND (p.name LIKE ? OR p.code LIKE ? OR p.barcode LIKE ? OR p.hsn_code LIKE ? OR p.size LIKE ? OR p.color LIKE ? OR p.brand LIKE ? OR p.fabric LIKE ? OR p.rack_location LIKE ?)`;
+    params.push(s, s, s, s, s, s, s, s, s);
   }
 
   if (filter.stockStatus === 'LOW') {
@@ -116,9 +141,10 @@ export function createProduct(db: Database.Database, input: ProductInput, busine
     const insertStmt = db.prepare(`
       INSERT INTO products (
         id, business_id, name, code, barcode, category_id, category_name, unit,
+        size, color, fabric, gender, brand, rack_location,
         purchase_price, selling_price, opening_stock, current_stock, minimum_stock,
         gst_rate, hsn_code, is_active, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     insertStmt.run(
@@ -130,12 +156,18 @@ export function createProduct(db: Database.Database, input: ProductInput, busine
       input.category_id || null,
       catName,
       input.unit || 'PCS',
+      input.size ? input.size.trim() : null,
+      input.color ? input.color.trim() : null,
+      input.fabric ? input.fabric.trim() : null,
+      input.gender ? input.gender.trim() : null,
+      input.brand ? input.brand.trim() : null,
+      input.rack_location ? input.rack_location.trim() : null,
       Number(input.purchase_price) || 0,
       Number(input.selling_price) || 0,
       openingStock,
       currentStock,
       input.minimum_stock !== undefined ? Number(input.minimum_stock) : 5,
-      input.gst_rate !== undefined ? Number(input.gst_rate) : 18.0,
+      input.gst_rate !== undefined ? Number(input.gst_rate) : 5.0,
       input.hsn_code ? input.hsn_code.trim() : null,
       input.is_active !== undefined ? input.is_active : 1,
       now,
@@ -218,6 +250,12 @@ export function updateProduct(db: Database.Database, id: string, input: Partial<
       category_id = COALESCE(?, category_id),
       category_name = COALESCE(?, category_name),
       unit = COALESCE(?, unit),
+      size = COALESCE(?, size),
+      color = COALESCE(?, color),
+      fabric = COALESCE(?, fabric),
+      gender = COALESCE(?, gender),
+      brand = COALESCE(?, brand),
+      rack_location = COALESCE(?, rack_location),
       purchase_price = COALESCE(?, purchase_price),
       selling_price = COALESCE(?, selling_price),
       minimum_stock = COALESCE(?, minimum_stock),
@@ -235,6 +273,12 @@ export function updateProduct(db: Database.Database, id: string, input: Partial<
     input.category_id !== undefined ? input.category_id : null,
     catName !== undefined ? catName : null,
     input.unit !== undefined ? input.unit : null,
+    input.size !== undefined ? input.size : null,
+    input.color !== undefined ? input.color : null,
+    input.fabric !== undefined ? input.fabric : null,
+    input.gender !== undefined ? input.gender : null,
+    input.brand !== undefined ? input.brand : null,
+    input.rack_location !== undefined ? input.rack_location : null,
     input.purchase_price !== undefined ? Number(input.purchase_price) : null,
     input.selling_price !== undefined ? Number(input.selling_price) : null,
     input.minimum_stock !== undefined ? Number(input.minimum_stock) : null,

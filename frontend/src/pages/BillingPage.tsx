@@ -675,8 +675,11 @@ export const BillingPage: React.FC = () => {
                             type="number"
                             min="0"
                             max="100"
+                            onKeyDown={(e) => {
+                              if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                            }}
                             value={item.discountPercent}
-                            onChange={(e) => handleDiscountChange(idx, Number(e.target.value), true)}
+                            onChange={(e) => handleDiscountChange(idx, Math.max(0, Math.min(100, Number(e.target.value) || 0)), true)}
                             className="w-14 p-1 text-right bg-slate-50 border border-slate-200 rounded font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
                         </td>
@@ -757,8 +760,12 @@ export const BillingPage: React.FC = () => {
                   min="0"
                   step="0.01"
                   value={invoiceDiscountAmount || ''}
+                  onKeyDown={(e) => {
+                    if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                  }}
                   onChange={(e) => {
-                    setInvoiceDiscountAmount(Number(e.target.value) || 0);
+                    const val = Math.max(0, Number(e.target.value) || 0);
+                    setInvoiceDiscountAmount(val);
                     setInvoiceDiscountPercent(0);
                   }}
                   placeholder="0.00"
