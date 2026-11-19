@@ -8,17 +8,24 @@ export async function getInventorySummary(req, res, next) {
 
     let totalProducts = products.length;
     let totalStockUnits = 0;
-    let totalStockValue = 0;
+    let totalCostValuation = 0;
+    let totalRetailValuation = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
 
     for (const p of products) {
-      totalStockUnits += p.currentStock || 0;
-      totalStockValue += (p.currentStock || 0) * (p.purchasePrice || p.sellingPrice || 0);
+      const stock = Number(p.currentStock) || 0;
+      const costPrice = Number(p.purchasePrice) || 0;
+      const sellPrice = Number(p.sellingPrice) || 0;
 
-      if (p.currentStock <= 0) {
+      totalStockUnits += stock;
+      totalCostValuation += stock * costPrice;
+      totalRetailValuation += stock * sellPrice;
+
+      const minStock = Number(p.minimumStock) || 0;
+      if (stock <= 0) {
         outOfStockCount++;
-      } else if (p.currentStock <= p.minimumStock) {
+      } else if (stock <= minStock) {
         lowStockCount++;
       }
     }
@@ -26,12 +33,17 @@ export async function getInventorySummary(req, res, next) {
     res.json({
       success: true,
       data: {
+        totalSkus: totalProducts,
         totalProducts,
+        totalUnits: totalStockUnits,
         totalStockUnits,
-        totalStockValue,
+        totalCostValuation,
+        totalStockValue: totalCostValuation,
+        totalRetailValuation,
+        totalStockRetailValue: totalRetailValuation,
         lowStockCount,
         outOfStockCount,
-        healthyCount: totalProducts - lowStockCount - outOfStockCount,
+        healthyCount: Math.max(0, totalProducts - lowStockCount - outOfStockCount),
       },
     });
   } catch (err) {

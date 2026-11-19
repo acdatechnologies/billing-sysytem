@@ -106,12 +106,14 @@ export const SalesReportsPage: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | undefined | null) => {
+    const num = Number(amount);
+    const safeVal = isNaN(num) || !isFinite(num) ? 0 : num;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(safeVal);
   };
 
   const periods: { label: string; value: ReportFilter['period'] }[] = [

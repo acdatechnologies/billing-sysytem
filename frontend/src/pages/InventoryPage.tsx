@@ -135,12 +135,14 @@ export const InventoryPage: React.FC = () => {
     }
   };
 
-  const formatCurrency = (val: number) => {
+  const formatCurrency = (val: number | string | undefined | null) => {
+    const num = Number(val);
+    const safeVal = isNaN(num) || !isFinite(num) ? 0 : num;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 2,
-    }).format(val);
+    }).format(safeVal);
   };
 
   const getMovementBadge = (type: StockMovement['movement_type']) => {
@@ -337,91 +339,103 @@ export const InventoryPage: React.FC = () => {
       )}
 
       {/* Top 4 KPI Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Stock Units */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Total Stock In Hand
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-100">
-              <Boxes className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
-              {summary.totalUnits}{' '}
-              <span className="text-xs font-normal text-slate-400">units</span>
-            </h3>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Spread across {summary.totalSkus} active items
-            </p>
-          </div>
-        </div>
+      {(() => {
+        const displayUnits = Number(summary?.totalUnits) || products.reduce((acc, p) => acc + (Number(p.current_stock) || 0), 0);
+        const displaySkus = Number(summary?.totalSkus) || products.length;
+        const displayCostValuation = Number(summary?.totalCostValuation) || products.reduce((acc, p) => acc + ((Number(p.purchase_price) || 0) * (Number(p.current_stock) || 0)), 0);
+        const displayRetailValuation = Number(summary?.totalRetailValuation) || products.reduce((acc, p) => acc + ((Number(p.selling_price) || 0) * (Number(p.current_stock) || 0)), 0);
+        const displayProfit = displayRetailValuation - displayCostValuation;
+        const displayLowStock = Number(summary?.lowStockCount) || products.filter(p => (Number(p.current_stock) || 0) > 0 && (Number(p.current_stock) || 0) <= (Number(p.minimum_stock) || 0)).length;
+        const displayOutOfStock = Number(summary?.outOfStockCount) || products.filter(p => (Number(p.current_stock) || 0) <= 0).length;
 
-        {/* Inventory Cost Valuation */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Stock Value (Cost)
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
-              <IndianRupee className="w-4 h-4" />
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Stock Units */}
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Total Stock In Hand
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-100">
+                  <Boxes className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
+                  {displayUnits}{' '}
+                  <span className="text-xs font-normal text-slate-400">units</span>
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Spread across {displaySkus} active items
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
-              {formatCurrency(summary.totalCostValuation)}
-            </h3>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Based on purchase prices
-            </p>
-          </div>
-        </div>
 
-        {/* Inventory Retail Potential */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Retail Potential (MRP)
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-              <TrendingUp className="w-4 h-4" />
+            {/* Inventory Cost Valuation */}
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Stock Value (Cost)
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                  <IndianRupee className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
+                  {formatCurrency(displayCostValuation)}
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Based on purchase prices
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
-              {formatCurrency(summary.totalRetailValuation)}
-            </h3>
-            <p className="text-[11px] text-emerald-600 font-medium mt-1">
-              Est. Profit: {formatCurrency(summary.totalRetailValuation - summary.totalCostValuation)}
-            </p>
-          </div>
-        </div>
 
-        {/* Stock Alerts */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Stock Attention
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-              <AlertTriangle className="w-4 h-4" />
+            {/* Inventory Retail Potential */}
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Retail Potential (MRP)
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
+                  {formatCurrency(displayRetailValuation)}
+                </h3>
+                <p className="text-[11px] text-emerald-600 font-medium mt-1">
+                  Est. Profit: {formatCurrency(displayProfit)}
+                </p>
+              </div>
+            </div>
+
+            {/* Stock Alerts */}
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Stock Attention
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <div>
+                  <span className="text-xl font-bold text-amber-600">{displayLowStock}</span>
+                  <span className="text-[11px] text-slate-500 block">Low Stock</span>
+                </div>
+                <div className="h-8 w-px bg-slate-200" />
+                <div>
+                  <span className="text-xl font-bold text-red-600">{displayOutOfStock}</span>
+                  <span className="text-[11px] text-slate-500 block">Out of Stock</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-3">
-            <div>
-              <span className="text-xl font-bold text-amber-600">{summary.lowStockCount}</span>
-              <span className="text-[11px] text-slate-500 block">Low Stock</span>
-            </div>
-            <div className="h-8 w-px bg-slate-200" />
-            <div>
-              <span className="text-xl font-bold text-red-600">{summary.outOfStockCount}</span>
-              <span className="text-[11px] text-slate-500 block">Out of Stock</span>
-            </div>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Tabs Switcher */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-1">

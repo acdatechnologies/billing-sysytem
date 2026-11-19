@@ -127,21 +127,21 @@ export function getInventorySummary(db: Database.Database) {
   const stats = db.prepare(`
     SELECT
       COUNT(id) as totalSkus,
-      COALESCE(SUM(current_stock), 0) as totalUnits,
-      COALESCE(SUM(purchase_price * current_stock), 0) as totalCostValuation,
-      COALESCE(SUM(selling_price * current_stock), 0) as totalRetailValuation,
-      SUM(CASE WHEN current_stock <= minimum_stock AND current_stock > 0 THEN 1 ELSE 0 END) as lowStockCount,
-      SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as outOfStockCount
+      COALESCE(SUM(COALESCE(current_stock, 0)), 0) as totalUnits,
+      COALESCE(SUM(COALESCE(purchase_price, 0) * COALESCE(current_stock, 0)), 0) as totalCostValuation,
+      COALESCE(SUM(COALESCE(selling_price, 0) * COALESCE(current_stock, 0)), 0) as totalRetailValuation,
+      COALESCE(SUM(CASE WHEN COALESCE(current_stock, 0) <= COALESCE(minimum_stock, 0) AND COALESCE(current_stock, 0) > 0 THEN 1 ELSE 0 END), 0) as lowStockCount,
+      COALESCE(SUM(CASE WHEN COALESCE(current_stock, 0) <= 0 THEN 1 ELSE 0 END), 0) as outOfStockCount
     FROM products
     WHERE is_active = 1
   `).get() as any;
 
   return {
-    totalSkus: stats.totalSkus || 0,
-    totalUnits: stats.totalUnits || 0,
-    totalCostValuation: stats.totalCostValuation || 0,
-    totalRetailValuation: stats.totalRetailValuation || 0,
-    lowStockCount: stats.lowStockCount || 0,
-    outOfStockCount: stats.outOfStockCount || 0,
+    totalSkus: Number(stats?.totalSkus) || 0,
+    totalUnits: Number(stats?.totalUnits) || 0,
+    totalCostValuation: Number(stats?.totalCostValuation) || 0,
+    totalRetailValuation: Number(stats?.totalRetailValuation) || 0,
+    lowStockCount: Number(stats?.lowStockCount) || 0,
+    outOfStockCount: Number(stats?.outOfStockCount) || 0,
   };
 }

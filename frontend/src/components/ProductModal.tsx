@@ -52,6 +52,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   });
 
   const [isCustomGst, setIsCustomGst] = useState(false);
+  const [isCustomSize, setIsCustomSize] = useState(false);
+  const [isCustomColor, setIsCustomColor] = useState(false);
+  const [isCustomFabric, setIsCustomFabric] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -81,7 +84,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         hsn_code: productToEdit.hsn_code || '',
       });
       setIsCustomGst(!COMMON_GST_RATES.includes(productToEdit.gst_rate));
+      setIsCustomSize(Boolean(productToEdit.size && !TEXTILE_SIZES.includes(productToEdit.size)));
+      setIsCustomColor(Boolean(productToEdit.color && !TEXTILE_COLORS.includes(productToEdit.color)));
+      setIsCustomFabric(Boolean(productToEdit.fabric && !TEXTILE_FABRICS.includes(productToEdit.fabric)));
     } else {
+      let isCancelled = false;
+      productApi.getNextProductCode().then((code) => {
+        if (!isCancelled && code) {
+          setFormData((prev) => ({ ...prev, code }));
+        }
+      }).catch(() => {});
+
       setFormData({
         name: '',
         code: 'PRO01',
@@ -102,6 +115,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         hsn_code: '',
       });
       setIsCustomGst(false);
+      setIsCustomSize(false);
+      setIsCustomColor(false);
+      setIsCustomFabric(false);
+      return () => {
+        isCancelled = true;
+      };
     }
     setError(null);
   }, [productToEdit, isOpen, categories]);
@@ -206,8 +225,24 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-          {/* Row 1: Name & Code */}
+          {/* Row 1: Code & Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold text-slate-700">
+                  Item Code / SKU <span className="text-red-500">*</span>
+                </label>
+                <span className="text-[11px] text-slate-400 font-medium">Auto-Generated (Read-Only)</span>
+              </div>
+              <input
+                type="text"
+                readOnly
+                placeholder="e.g. PRO01"
+                value={formData.code}
+                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg font-mono text-slate-600 cursor-not-allowed select-none uppercase font-semibold"
+              />
+            </div>
+
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
                 Product Name <span className="text-red-500">*</span>
@@ -215,33 +250,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               <input
                 type="text"
                 required
-                placeholder="e.g. Wireless Thermal Printer 80mm"
+                placeholder="e.g. Cotton Formal Shirt"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-medium"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="font-semibold text-slate-700">
-                  Item Code <span className="text-red-500">*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={generateAutoCode}
-                  className="text-[11px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                >
-                  <Sparkles className="w-3 h-3" /> Auto Code
-                </button>
-              </div>
-              <input
-                type="text"
-                required
-                placeholder="e.g. PRN-80W"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 uppercase"
               />
             </div>
           </div>
@@ -318,43 +330,70 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           </div>
 
           {/* Textile & Garment Specifications */}
-          <div className="space-y-4 pt-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Size Field with Quick Pills */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Size <span className="text-slate-400 font-normal">(e.g. 40, XL, Free Size)</span>
-                </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+            {/* Size Dropdown */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold text-slate-700">Size</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomSize(!isCustomSize);
+                    if (!isCustomSize) setFormData((prev) => ({ ...prev, size: '' }));
+                  }}
+                  className="text-2xs text-blue-600 font-semibold hover:underline"
+                >
+                  {isCustomSize ? 'Presets' : '+ Custom'}
+                </button>
+              </div>
+              {isCustomSize ? (
                 <input
                   type="text"
-                  placeholder="Select or enter size"
+                  placeholder="e.g. 40, XL, Free Size"
                   value={formData.size || ''}
                   onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {TEXTILE_SIZES.slice(0, 10).map((sz) => (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, size: sz })}
-                      className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
-                        formData.size === sz
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
+              ) : (
+                <select
+                  value={formData.size || ''}
+                  onChange={(e) => {
+                    if (e.target.value === 'CUSTOM') {
+                      setIsCustomSize(true);
+                      setFormData({ ...formData, size: '' });
+                    } else {
+                      setFormData({ ...formData, size: e.target.value });
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  <option value="">-- Select Size --</option>
+                  {TEXTILE_SIZES.map((sz) => (
+                    <option key={sz} value={sz}>
                       {sz}
-                    </button>
+                    </option>
                   ))}
-                </div>
-              </div>
+                  <option value="CUSTOM">+ Other Custom Size...</option>
+                </select>
+              )}
+            </div>
 
-              {/* Color Field with Quick Pills */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Color / Shade
-                </label>
+            {/* Color Dropdown */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold text-slate-700">Color / Shade</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomColor(!isCustomColor);
+                    if (!isCustomColor) setFormData((prev) => ({ ...prev, color: '' }));
+                  }}
+                  className="text-2xs text-blue-600 font-semibold hover:underline"
+                >
+                  {isCustomColor ? 'Presets' : '+ Custom'}
+                </button>
+              </div>
+              {isCustomColor ? (
                 <input
                   type="text"
                   placeholder="e.g. Navy Blue, White, Maroon"
@@ -362,92 +401,122 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {TEXTILE_COLORS.slice(0, 8).map((col) => (
-                    <button
-                      key={col}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: col })}
-                      className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
-                        formData.color === col
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
+              ) : (
+                <select
+                  value={formData.color || ''}
+                  onChange={(e) => {
+                    if (e.target.value === 'CUSTOM') {
+                      setIsCustomColor(true);
+                      setFormData({ ...formData, color: '' });
+                    } else {
+                      setFormData({ ...formData, color: e.target.value });
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  <option value="">-- Select Color --</option>
+                  {TEXTILE_COLORS.map((col) => (
+                    <option key={col} value={col}>
                       {col}
-                    </button>
+                    </option>
                   ))}
-                </div>
-              </div>
+                  <option value="CUSTOM">+ Other Custom Color...</option>
+                </select>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Fabric / Material */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Fabric / Material
-                </label>
+            {/* Fabric Dropdown */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold text-slate-700">Fabric / Material</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomFabric(!isCustomFabric);
+                    if (!isCustomFabric) setFormData((prev) => ({ ...prev, fabric: '' }));
+                  }}
+                  className="text-2xs text-blue-600 font-semibold hover:underline"
+                >
+                  {isCustomFabric ? 'Presets' : '+ Custom'}
+                </button>
+              </div>
+              {isCustomFabric ? (
                 <input
                   type="text"
-                  list="fabrics-list-modal"
                   placeholder="e.g. Cotton, Pure Silk"
                   value={formData.fabric || ''}
                   onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
-                <datalist id="fabrics-list-modal">
-                  {TEXTILE_FABRICS.map((f) => (
-                    <option key={f} value={f} />
-                  ))}
-                </datalist>
-              </div>
-
-              {/* Gender / Section */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Section
-                </label>
+              ) : (
                 <select
-                  value={formData.gender || ''}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                  value={formData.fabric || ''}
+                  onChange={(e) => {
+                    if (e.target.value === 'CUSTOM') {
+                      setIsCustomFabric(true);
+                      setFormData({ ...formData, fabric: '' });
+                    } else {
+                      setFormData({ ...formData, fabric: e.target.value });
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
-                  <option value="">-- Select Section --</option>
-                  {TEXTILE_GENDERS.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
+                  <option value="">-- Select Fabric --</option>
+                  {TEXTILE_FABRICS.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
                     </option>
                   ))}
+                  <option value="CUSTOM">+ Other Custom Fabric...</option>
                 </select>
-              </div>
+              )}
+            </div>
 
-              {/* Brand / Manufacturer */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Brand
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Ramraj, Otto"
-                  value={formData.brand || ''}
-                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
+            {/* Gender / Section */}
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Section
+              </label>
+              <select
+                value={formData.gender || ''}
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+              >
+                <option value="">-- Select Section --</option>
+                {TEXTILE_GENDERS.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* Rack / Location in Shop */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Rack / Shelf Location
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Rack A-1"
-                  value={formData.rack_location || ''}
-                  onChange={(e) => setFormData({ ...formData, rack_location: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                />
-              </div>
+            {/* Brand / Manufacturer */}
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Brand
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Ramraj, Otto"
+                value={formData.brand || ''}
+                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Rack / Location in Shop */}
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Rack / Shelf Location
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Rack A-1"
+                value={formData.rack_location || ''}
+                onChange={(e) => setFormData({ ...formData, rack_location: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+              />
             </div>
           </div>
 

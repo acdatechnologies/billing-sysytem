@@ -13,10 +13,22 @@ export const inventoryApi = {
   // Get inventory metrics summary
   async getInventorySummary(): Promise<InventorySummary> {
     const electron = getElectronAPI();
+    let raw: any = null;
     if (electron) {
-      return await electron.getInventorySummary();
+      raw = await electron.getInventorySummary();
+    } else {
+      const res = await restRequest<any>('/inventory/summary');
+      raw = res?.data !== undefined ? res.data : res;
     }
-    return await restRequest<InventorySummary>('/inventory/summary');
+
+    return {
+      totalSkus: Number(raw?.totalSkus ?? raw?.totalProducts ?? 0) || 0,
+      totalUnits: Number(raw?.totalUnits ?? raw?.totalStockUnits ?? 0) || 0,
+      totalCostValuation: Number(raw?.totalCostValuation ?? raw?.totalStockValue ?? 0) || 0,
+      totalRetailValuation: Number(raw?.totalRetailValuation ?? raw?.totalStockRetailValue ?? 0) || 0,
+      lowStockCount: Number(raw?.lowStockCount ?? 0) || 0,
+      outOfStockCount: Number(raw?.outOfStockCount ?? 0) || 0,
+    };
   },
 
   // Get stock audit movements
