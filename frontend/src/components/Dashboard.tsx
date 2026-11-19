@@ -25,12 +25,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(amount || 0);
   };
+
+  const monthlySalesList = Array.isArray(metrics?.monthlySales) ? metrics.monthlySales : [];
+  const lowStockList = Array.isArray(metrics?.lowStockProducts) ? metrics.lowStockProducts : [];
+  const recentTransactionsList = Array.isArray(metrics?.recentTransactions)
+    ? metrics.recentTransactions
+    : (Array.isArray((metrics as any)?.recentInvoices) ? (metrics as any).recentInvoices : []);
 
   // Find max sales for SVG scaling
   const maxMonthlySales = Math.max(
-    ...metrics.monthlySales.map((m) => m.sales),
+    ...(monthlySalesList.length > 0 ? monthlySalesList.map((m) => Number(m.sales) || 0) : [0]),
     1000
   );
 
@@ -181,7 +187,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             </button>
           </div>
 
-          {metrics.monthlySales.length === 0 ? (
+          {monthlySalesList.length === 0 ? (
             <div className="h-56 flex flex-col items-center justify-center text-slate-400">
               <FileText className="w-8 h-8 mb-2 stroke-1" />
               <p className="text-sm font-medium">No sales recorded yet</p>
@@ -191,7 +197,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             </div>
           ) : (
             <div className="h-56 flex items-end justify-between gap-4 pt-6 px-2">
-              {metrics.monthlySales.map((item) => {
+              {monthlySalesList.map((item) => {
                 const heightPercent = Math.max(
                   (item.sales / maxMonthlySales) * 100,
                   6
@@ -299,7 +305,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             </button>
           </div>
 
-          {metrics.lowStockProducts.length === 0 ? (
+          {lowStockList.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
               <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
               <p className="text-sm font-semibold text-slate-700">
@@ -322,7 +328,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {metrics.lowStockProducts.map((p) => (
+                  {lowStockList.map((p: any) => (
                     <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2.5 px-4 font-medium text-slate-800">
                         {p.name}
@@ -366,7 +372,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             </button>
           </div>
 
-          {metrics.recentTransactions.length === 0 ? (
+          {recentTransactionsList.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
               <Receipt className="w-8 h-8 text-slate-300 mx-auto mb-2" />
               <p className="text-sm font-semibold text-slate-700">
@@ -389,7 +395,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {metrics.recentTransactions.map((tx) => (
+                  {recentTransactionsList.map((tx: any) => (
                     <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2.5 px-4 font-mono font-bold text-blue-600">
                         {tx.invoice_number}

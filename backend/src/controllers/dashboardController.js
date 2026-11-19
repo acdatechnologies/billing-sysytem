@@ -43,17 +43,52 @@ export async function getDashboardMetrics(req, res, next) {
       .sort({ createdAt: -1 })
       .limit(5);
 
+    // Monthly sales formatted as array of month summaries
+    const curMonthName = new Date().toLocaleDateString('en-US', { month: 'short' });
+    const monthlySalesArray = [
+      {
+        month: curMonthName,
+        sales: monthlySales,
+        bills: monthlyInvoiceCount,
+      },
+    ];
+
+    // Low stock products
+    const lowStockProducts = products
+      .filter((p) => p.currentStock <= p.minimumStock)
+      .slice(0, 10)
+      .map((p) => ({
+        id: p.productId || p._id,
+        name: p.name,
+        code: p.code,
+        current_stock: p.currentStock,
+        minimum_stock: p.minimumStock,
+        unit: p.unit,
+        selling_price: p.sellingPrice,
+      }));
+
     res.json({
       success: true,
       data: {
         todaySales,
-        todayInvoiceCount,
-        monthlySales,
-        monthlyInvoiceCount,
+        todayBills: todayInvoiceCount,
         totalProducts,
+        availableStock: products.reduce((sum, p) => sum + (p.currentStock || 0), 0),
         lowStockCount,
+        lowStockProducts,
         totalCustomers,
-        recentInvoices,
+        recentTransactions: recentInvoices.map((inv) => ({
+          id: inv.invoiceId || inv._id,
+          invoice_number: inv.invoiceNumber,
+          customer_name: inv.customerName,
+          customer_mobile: inv.customerMobile,
+          grand_total: inv.grandTotal,
+          payment_method: inv.paymentMethod,
+          payment_status: inv.paymentStatus,
+          status: inv.status,
+          created_at: inv.createdAt,
+        })),
+        monthlySales: monthlySalesArray,
       },
     });
   } catch (err) {
