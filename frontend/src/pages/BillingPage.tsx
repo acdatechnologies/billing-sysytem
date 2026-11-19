@@ -126,7 +126,12 @@ export const BillingPage: React.FC = () => {
         p.name.toLowerCase().includes(q) ||
         p.code.toLowerCase().includes(q) ||
         (p.barcode && p.barcode.toLowerCase().includes(q)) ||
-        (p.hsn_code && p.hsn_code.includes(q))
+        (p.hsn_code && p.hsn_code.includes(q)) ||
+        (p.size && p.size.toLowerCase().includes(q)) ||
+        (p.color && p.color.toLowerCase().includes(q)) ||
+        (p.brand && p.brand.toLowerCase().includes(q)) ||
+        (p.fabric && p.fabric.toLowerCase().includes(q)) ||
+        (p.rack_location && p.rack_location.toLowerCase().includes(q))
     );
     setSearchResults(matches.slice(0, 8));
     setIsSearching(true);
@@ -553,9 +558,21 @@ export const BillingPage: React.FC = () => {
                     className="p-2.5 hover:bg-blue-50/70 cursor-pointer flex items-center justify-between text-xs transition-colors"
                   >
                     <div>
-                      <div className="font-bold text-slate-800">{p.name}</div>
-                      <div className="text-[10px] text-slate-500">
-                        Code: <span className="font-mono">{p.code}</span> | GST: {p.gst_rate}% | Stock:{' '}
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-800">{p.name}</span>
+                        {p.size && (
+                          <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded border border-purple-200">
+                            Size: {p.size}
+                          </span>
+                        )}
+                        {p.color && (
+                          <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded border border-blue-200">
+                            {p.color}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        Code: <span className="font-mono">{p.code}</span> | GST: {p.gst_rate}% {p.brand ? `| Brand: ${p.brand}` : ''} | Stock:{' '}
                         <strong className={p.current_stock <= p.minimum_stock ? 'text-amber-600' : 'text-emerald-600'}>
                           {p.current_stock} {p.unit}
                         </strong>
@@ -623,7 +640,24 @@ export const BillingPage: React.FC = () => {
                         {/* Name & Code */}
                         <td className="py-2.5 px-3">
                           <div className="font-semibold text-slate-800">{item.product.name}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                            {item.product.size && (
+                              <span className="text-[10px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.2 rounded border border-purple-200">
+                                Size: {item.product.size}
+                              </span>
+                            )}
+                            {item.product.color && (
+                              <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded border border-blue-200">
+                                {item.product.color}
+                              </span>
+                            )}
+                            {item.product.fabric && (
+                              <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded border border-emerald-200">
+                                {item.product.fabric}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                             {item.product.code} {item.product.hsn_code ? `| HSN: ${item.product.hsn_code}` : ''}
                           </div>
                         </td>

@@ -43,6 +43,8 @@ export const InventoryPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [stockStatusFilter, setStockStatusFilter] = useState<'ALL' | 'LOW' | 'OUT' | 'HEALTHY'>('ALL');
+  const [selectedGender, setSelectedGender] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
 
   // Stock Adjustment Form State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -64,7 +66,14 @@ export const InventoryPage: React.FC = () => {
         inventoryApi.getInventorySummary(),
         inventoryApi.getStockMovements(undefined, 80),
       ]);
-      setProducts(prodList || []);
+      let filtered = prodList || [];
+      if (selectedGender) {
+        filtered = filtered.filter((p) => p.gender && p.gender.toLowerCase().includes(selectedGender.toLowerCase()));
+      }
+      if (selectedSize) {
+        filtered = filtered.filter((p) => p.size && p.size.toLowerCase() === selectedSize.toLowerCase());
+      }
+      setProducts(filtered);
       setSummary(sumData);
       setMovements(movList || []);
     } catch (err) {
@@ -72,7 +81,7 @@ export const InventoryPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, stockStatusFilter]);
+  }, [search, stockStatusFilter, selectedGender, selectedSize]);
 
   useEffect(() => {
     fetchInventoryData();
@@ -171,7 +180,7 @@ export const InventoryPage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-6 max-w-2xl mx-auto pb-12">
+      <div className="w-full space-y-6 pb-12">
         {/* Breadcrumb Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div className="flex items-center gap-2 text-xs">
@@ -445,25 +454,55 @@ export const InventoryPage: React.FC = () => {
       {activeTab === 'STOCK' && (
         <div className="space-y-4">
           {/* Filters Bar */}
-          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
             <div className="relative w-full md:w-80">
               <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search stock by item or code..."
+                placeholder="Search stock by item, size, color, rack..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              {/* Section Filter */}
+              <select
+                value={selectedGender}
+                onChange={(e) => setSelectedGender(e.target.value)}
+                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
+              >
+                <option value="">All Sections</option>
+                <option value="Men">Men's Wear</option>
+                <option value="Women">Women's Wear</option>
+                <option value="Kids">Kids & Babies</option>
+                <option value="Boys">Boys</option>
+                <option value="Girls">Girls</option>
+                <option value="Home">Home Textiles</option>
+              </select>
+
+              {/* Size Filter */}
+              <select
+                value={selectedSize}
+                onChange={(e) => setSelectedSize(e.target.value)}
+                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
+              >
+                <option value="">All Sizes</option>
+                {['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '28', '30', '32', '34', '36', '38', '40', '42', 'Unstitched'].map((sz) => (
+                  <option key={sz} value={sz}>
+                    Size {sz}
+                  </option>
+                ))}
+              </select>
+
+              {/* Stock Status Filter */}
               <select
                 value={stockStatusFilter}
                 onChange={(e) => setStockStatusFilter(e.target.value as any)}
-                className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
+                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
               >
-                <option value="ALL">All Items</option>
+                <option value="ALL">All Stock</option>
                 <option value="LOW">Low Stock Only</option>
                 <option value="OUT">Out of Stock Only</option>
                 <option value="HEALTHY">In Stock (Healthy)</option>
@@ -496,7 +535,32 @@ export const InventoryPage: React.FC = () => {
                       <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3 px-4">
                           <div className="font-semibold text-slate-800">{item.name}</div>
-                          <div className="text-[10px] text-slate-400">Unit: {item.unit}</div>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            {item.size && (
+                              <span className="text-[10px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">
+                                Size: {item.size}
+                              </span>
+                            )}
+                            {item.color && (
+                              <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
+                                {item.color}
+                              </span>
+                            )}
+                            {item.fabric && (
+                              <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">
+                                {item.fabric}
+                              </span>
+                            )}
+                            {item.rack_location && (
+                              <span className="text-[10px] font-mono font-medium bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">
+                                📍 {item.rack_location}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1">
+                            Unit: <strong className="text-slate-600">{item.unit}</strong>{' '}
+                            {item.brand ? `| Brand: ${item.brand}` : ''}
+                          </div>
                         </td>
 
                         <td className="py-3 px-3 font-mono font-semibold text-purple-700">{item.code}</td>

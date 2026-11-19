@@ -317,6 +317,148 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             </div>
           </div>
 
+          {/* Textile & Garment Specifications */}
+          <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-xl space-y-3.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                Textile & Garment Details (துணி & ஆடை விவரங்கள்)
+              </span>
+              <span className="text-[10px] text-purple-600 font-medium">Size, Color, Fabric & Section</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* Size Field with Quick Pills */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Size (அளவு) <span className="text-slate-400 font-normal">(e.g. 40, XL, Free Size)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Select or enter size"
+                  value={formData.size || ''}
+                  onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {TEXTILE_SIZES.slice(0, 10).map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, size: sz })}
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium border transition-colors ${
+                        formData.size === sz
+                          ? 'bg-purple-600 text-white border-purple-600'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Field with Quick Pills */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Color / Shade (வண்ணம் / நிறம்)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Navy Blue, White, Maroon"
+                  value={formData.color || ''}
+                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {TEXTILE_COLORS.slice(0, 8).map((col) => (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, color: col })}
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium border transition-colors ${
+                        formData.color === col
+                          ? 'bg-purple-600 text-white border-purple-600'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                      }`}
+                    >
+                      {col}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+              {/* Fabric / Material */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Fabric (துணி வகை)
+                </label>
+                <input
+                  type="text"
+                  list="fabrics-list-modal"
+                  placeholder="e.g. Cotton, Pure Silk"
+                  value={formData.fabric || ''}
+                  onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+                <datalist id="fabrics-list-modal">
+                  {TEXTILE_FABRICS.map((f) => (
+                    <option key={f} value={f} />
+                  ))}
+                </datalist>
+              </div>
+
+              {/* Gender / Section */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Section (பிரிவு)
+                </label>
+                <select
+                  value={formData.gender || ''}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium"
+                >
+                  <option value="">-- Select Section --</option>
+                  {TEXTILE_GENDERS.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Brand / Manufacturer */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Brand (பிராண்ட்)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Ramraj, Otto"
+                  value={formData.brand || ''}
+                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+
+              {/* Rack / Location in Shop */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Rack / Shelf (ரேக் எண்)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rack A-1"
+                  value={formData.rack_location || ''}
+                  onChange={(e) => setFormData({ ...formData, rack_location: e.target.value })}
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Row 3: Unit, HSN Code, GST Rate */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

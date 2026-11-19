@@ -28,8 +28,13 @@ import { productApi } from '../api/productApi';
 import { inventoryApi } from '../api/inventoryApi';
 import { validateProduct, validateStockAdjustment } from '../utils/validators';
 
-const COMMON_UNITS = ['PCS', 'BOX', 'KG', 'GM', 'LTR', 'ML', 'MTR', 'SET', 'PKT', 'DOZ'];
+const COMMON_UNITS = ['PCS', 'MTR', 'SET', 'BOX', 'ROLL', 'PKT', 'DOZ'];
 const COMMON_GST_RATES = [0, 5, 12, 18, 28];
+
+const TEXTILE_SIZES = ['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '28', '30', '32', '34', '36', '38', '40', '42', 'Unstitched'];
+const TEXTILE_COLORS = ['White', 'Black', 'Navy Blue', 'Maroon', 'Red', 'Sky Blue', 'Pink', 'Green', 'Yellow', 'Grey', 'Cream', 'Multi'];
+const TEXTILE_FABRICS = ['Cotton', 'Pure Silk (பட்டு)', 'Art Silk', 'Linen', 'Rayon', 'Polyester', 'Denim', 'Georgette', 'Chiffon', 'Banarasi', 'Satin', 'Handloom'];
+const TEXTILE_GENDERS = ["Men's Wear (ஆண்கள்)", "Women's Wear (பெண்கள்)", "Boys (சிறுவர்கள்)", "Girls (சிறுமிகள்)", "Kids / Baby (குழந்தைகள்)", "Unisex", "Home Textiles (வீட்டு உபயோகம்)"];
 
 export const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -42,6 +47,8 @@ export const ProductsPage: React.FC = () => {
   // Filters
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedGender, setSelectedGender] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'HEALTHY' | 'LOW' | 'OUT'>('ALL');
 
   // Product Form State (Add / Edit)
@@ -52,11 +59,17 @@ export const ProductsPage: React.FC = () => {
     barcode: '',
     category_id: '',
     unit: 'PCS',
+    size: '',
+    color: '',
+    fabric: '',
+    gender: "Men's Wear (ஆண்கள்)",
+    brand: '',
+    rack_location: '',
     purchase_price: 0,
     selling_price: 0,
     opening_stock: 0,
     minimum_stock: 5,
-    gst_rate: 18,
+    gst_rate: 5,
     hsn_code: '',
   });
   const [isCustomGst, setIsCustomGst] = useState(false);
@@ -90,14 +103,21 @@ export const ProductsPage: React.FC = () => {
         }),
         productApi.getCategories(),
       ]);
-      setProducts(prodList || []);
+      let filtered = prodList || [];
+      if (selectedGender) {
+        filtered = filtered.filter((p) => p.gender && p.gender.toLowerCase().includes(selectedGender.toLowerCase()));
+      }
+      if (selectedSize) {
+        filtered = filtered.filter((p) => p.size && p.size.toLowerCase() === selectedSize.toLowerCase());
+      }
+      setProducts(filtered);
       setCategories(catList || []);
     } catch (err) {
       console.error('[ProductsPage] Error fetching products:', err);
     } finally {
       setLoading(false);
     }
-  }, [search, selectedCategory, stockFilter]);
+  }, [search, selectedCategory, stockFilter, selectedGender, selectedSize]);
 
   useEffect(() => {
     fetchData();
@@ -119,11 +139,17 @@ export const ProductsPage: React.FC = () => {
       barcode: '',
       category_id: categories.length > 0 ? categories[0].id : '',
       unit: 'PCS',
+      size: '',
+      color: '',
+      fabric: '',
+      gender: "Men's Wear (ஆண்கள்)",
+      brand: '',
+      rack_location: '',
       purchase_price: 0,
       selling_price: 0,
       opening_stock: 0,
       minimum_stock: 5,
-      gst_rate: 18,
+      gst_rate: 5,
       hsn_code: '',
     });
     setIsCustomGst(false);
@@ -140,10 +166,16 @@ export const ProductsPage: React.FC = () => {
       barcode: product.barcode || '',
       category_id: product.category_id || '',
       unit: product.unit || 'PCS',
+      size: product.size || '',
+      color: product.color || '',
+      fabric: product.fabric || '',
+      gender: product.gender || "Men's Wear (ஆண்கள்)",
+      brand: product.brand || '',
+      rack_location: product.rack_location || '',
       purchase_price: product.purchase_price,
       selling_price: product.selling_price,
       minimum_stock: product.minimum_stock,
-      gst_rate: product.gst_rate,
+      gst_rate: product.gst_rate !== undefined ? product.gst_rate : 5,
       hsn_code: product.hsn_code || '',
     });
     setIsCustomGst(!COMMON_GST_RATES.includes(product.gst_rate));
@@ -284,7 +316,7 @@ export const ProductsPage: React.FC = () => {
   // -------------------------------------------------------------
   if (view === 'FORM') {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto pb-12">
+      <div className="w-full space-y-6 pb-12">
         {/* Breadcrumb Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div className="flex items-center gap-2 text-xs">
@@ -444,6 +476,150 @@ export const ProductsPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Textile & Garment Specifications */}
+            <div className="pt-4 border-t border-slate-100">
+              <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    Textile & Garment Specifications (துணி & ஆடை விவரங்கள்)
+                  </span>
+                  <span className="text-[10px] text-purple-600 font-medium">Textile Shop Fields</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Size Field with Quick Pills */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Size (அளவு) <span className="text-slate-400 font-normal">(e.g. 38, 40, XL, Free Size)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Select or enter size"
+                      value={formData.size || ''}
+                      onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {TEXTILE_SIZES.slice(0, 10).map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, size: sz })}
+                          className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
+                            formData.size === sz
+                              ? 'bg-purple-600 text-white border-purple-600'
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Color Field with Quick Pills */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Color / Shade (வண்ணம் / நிறம்)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Navy Blue, White, Maroon"
+                      value={formData.color || ''}
+                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {TEXTILE_COLORS.slice(0, 8).map((col) => (
+                        <button
+                          key={col}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, color: col })}
+                          className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
+                            formData.color === col
+                              ? 'bg-purple-600 text-white border-purple-600'
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                          }`}
+                        >
+                          {col}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
+                  {/* Fabric / Material */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Fabric (துணி வகை)
+                    </label>
+                    <input
+                      type="text"
+                      list="fabrics-list-page"
+                      placeholder="e.g. Cotton, Pure Silk"
+                      value={formData.fabric || ''}
+                      onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    />
+                    <datalist id="fabrics-list-page">
+                      {TEXTILE_FABRICS.map((f) => (
+                        <option key={f} value={f} />
+                      ))}
+                    </datalist>
+                  </div>
+
+                  {/* Gender / Section */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Section (பிரிவு)
+                    </label>
+                    <select
+                      value={formData.gender || ''}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 font-medium"
+                    >
+                      <option value="">-- Select Section --</option>
+                      {TEXTILE_GENDERS.map((g) => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Brand / Manufacturer */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Brand (பிராண்ட்)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ramraj, Otto"
+                      value={formData.brand || ''}
+                      onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    />
+                  </div>
+
+                  {/* Rack / Location in Shop */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Rack / Shelf (ரேக் எண்)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Rack A-1"
+                      value={formData.rack_location || ''}
+                      onChange={(e) => setFormData({ ...formData, rack_location: e.target.value })}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Pricing & GST */}
             <div className="pt-4 border-t border-slate-100">
               <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Pricing & Tax (GST)</h3>
@@ -585,7 +761,7 @@ export const ProductsPage: React.FC = () => {
     }
 
     return (
-      <div className="space-y-6 max-w-2xl mx-auto pb-12">
+      <div className="w-full space-y-6 pb-12">
         {/* Breadcrumb Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div className="flex items-center gap-2 text-xs">
@@ -748,19 +924,48 @@ export const ProductsPage: React.FC = () => {
           <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by name, code, barcode, HSN..."
+            placeholder="Search by name, size, color, brand, barcode..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-800"
           />
         </div>
 
-        {/* Category & Stock Filter */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        {/* Textile Filters & Action Bar */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {/* Section / Gender Filter */}
+          <select
+            value={selectedGender}
+            onChange={(e) => setSelectedGender(e.target.value)}
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+          >
+            <option value="">All Sections</option>
+            {TEXTILE_GENDERS.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+
+          {/* Size Filter */}
+          <select
+            value={selectedSize}
+            onChange={(e) => setSelectedSize(e.target.value)}
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+          >
+            <option value="">All Sizes</option>
+            {TEXTILE_SIZES.map((sz) => (
+              <option key={sz} value={sz}>
+                Size {sz}
+              </option>
+            ))}
+          </select>
+
+          {/* Category Filter */}
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
           >
             <option value="">All Categories ({categories.length})</option>
             {categories.map((c) => (
@@ -770,14 +975,15 @@ export const ProductsPage: React.FC = () => {
             ))}
           </select>
 
+          {/* Stock Filter */}
           <select
             value={stockFilter}
             onChange={(e) => setStockFilter(e.target.value as any)}
-            className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
           >
-            <option value="ALL">All Stock Levels</option>
-            <option value="HEALTHY">In Stock (Healthy)</option>
-            <option value="LOW">Low Stock Warning</option>
+            <option value="ALL">All Stock</option>
+            <option value="HEALTHY">In Stock</option>
+            <option value="LOW">Low Stock</option>
             <option value="OUT">Out of Stock</option>
           </select>
 
@@ -786,7 +992,7 @@ export const ProductsPage: React.FC = () => {
             className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-xs transition-all ml-auto md:ml-0"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Product</span>
+            <span>Add Garment</span>
           </button>
         </div>
       </div>
@@ -827,8 +1033,36 @@ export const ProductsPage: React.FC = () => {
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3 px-4">
                         <div className="font-semibold text-slate-800">{item.name}</div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          {item.size && (
+                            <span className="text-[10px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">
+                              Size: {item.size}
+                            </span>
+                          )}
+                          {item.color && (
+                            <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
+                              {item.color}
+                            </span>
+                          )}
+                          {item.fabric && (
+                            <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">
+                              {item.fabric}
+                            </span>
+                          )}
+                          {item.gender && (
+                            <span className="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                              {item.gender.split(' ')[0]}
+                            </span>
+                          )}
+                          {item.rack_location && (
+                            <span className="text-[10px] font-mono font-medium bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">
+                              📍 {item.rack_location}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1">
                           Unit: <strong className="text-slate-600">{item.unit}</strong>{' '}
+                          {item.brand ? `| Brand: ${item.brand} ` : ''}
                           {item.hsn_code ? `| HSN: ${item.hsn_code}` : ''}
                         </div>
                       </td>
