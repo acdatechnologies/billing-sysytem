@@ -33,8 +33,8 @@ const COMMON_GST_RATES = [0, 5, 12, 18, 28];
 
 const TEXTILE_SIZES = ['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '28', '30', '32', '34', '36', '38', '40', '42', 'Unstitched'];
 const TEXTILE_COLORS = ['White', 'Black', 'Navy Blue', 'Maroon', 'Red', 'Sky Blue', 'Pink', 'Green', 'Yellow', 'Grey', 'Cream', 'Multi'];
-const TEXTILE_FABRICS = ['Cotton', 'Pure Silk (பட்டு)', 'Art Silk', 'Linen', 'Rayon', 'Polyester', 'Denim', 'Georgette', 'Chiffon', 'Banarasi', 'Satin', 'Handloom'];
-const TEXTILE_GENDERS = ["Men's Wear (ஆண்கள்)", "Women's Wear (பெண்கள்)", "Boys (சிறுவர்கள்)", "Girls (சிறுமிகள்)", "Kids / Baby (குழந்தைகள்)", "Unisex", "Home Textiles (வீட்டு உபயோகம்)"];
+const TEXTILE_FABRICS = ['Cotton', 'Pure Silk', 'Art Silk', 'Linen', 'Rayon', 'Polyester', 'Denim', 'Georgette', 'Chiffon', 'Banarasi', 'Satin', 'Handloom'];
+const TEXTILE_GENDERS = ["Men's Wear", "Women's Wear", "Boys", "Girls", "Kids / Baby", "Unisex", "Home Textiles"];
 
 export const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -62,7 +62,7 @@ export const ProductsPage: React.FC = () => {
     size: '',
     color: '',
     fabric: '',
-    gender: "Men's Wear (ஆண்கள்)",
+    gender: "Men's Wear",
     brand: '',
     rack_location: '',
     purchase_price: 0,
@@ -142,7 +142,7 @@ export const ProductsPage: React.FC = () => {
       size: '',
       color: '',
       fabric: '',
-      gender: "Men's Wear (ஆண்கள்)",
+      gender: "Men's Wear",
       brand: '',
       rack_location: '',
       purchase_price: 0,
@@ -169,7 +169,7 @@ export const ProductsPage: React.FC = () => {
       size: product.size || '',
       color: product.color || '',
       fabric: product.fabric || '',
-      gender: product.gender || "Men's Wear (ஆண்கள்)",
+      gender: product.gender || "Men's Wear",
       brand: product.brand || '',
       rack_location: product.rack_location || '',
       purchase_price: product.purchase_price,
@@ -478,20 +478,16 @@ export const ProductsPage: React.FC = () => {
 
             {/* Textile & Garment Specifications */}
             <div className="pt-4 border-t border-slate-100">
-              <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                    Textile & Garment Specifications (துணி & ஆடை விவரங்கள்)
-                  </span>
-                  <span className="text-[10px] text-purple-600 font-medium">Textile Shop Fields</span>
-                </div>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+                Textile & Garment Specifications
+              </h3>
 
+              <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Size Field with Quick Pills */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Size (அளவு) <span className="text-slate-400 font-normal">(e.g. 38, 40, XL, Free Size)</span>
+                      Size <span className="text-slate-400 font-normal">(e.g. 38, 40, XL, Free Size)</span>
                     </label>
                     <input
                       type="text"
@@ -509,7 +505,7 @@ export const ProductsPage: React.FC = () => {
                           className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
                             formData.size === sz
                               ? 'bg-purple-600 text-white border-purple-600'
-                              : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                           }`}
                         >
                           {sz}
@@ -521,7 +517,7 @@ export const ProductsPage: React.FC = () => {
                   {/* Color Field with Quick Pills */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Color / Shade (வண்ணம் / நிறம்)
+                      Color / Shade
                     </label>
                     <input
                       type="text"
@@ -539,7 +535,7 @@ export const ProductsPage: React.FC = () => {
                           className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
                             formData.color === col
                               ? 'bg-purple-600 text-white border-purple-600'
-                              : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                           }`}
                         >
                           {col}
@@ -549,11 +545,11 @@ export const ProductsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {/* Fabric / Material */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Fabric (துணி வகை)
+                      Fabric / Material
                     </label>
                     <input
                       type="text"
@@ -573,7 +569,7 @@ export const ProductsPage: React.FC = () => {
                   {/* Gender / Section */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Section (பிரிவு)
+                      Section
                     </label>
                     <select
                       value={formData.gender || ''}
@@ -592,7 +588,7 @@ export const ProductsPage: React.FC = () => {
                   {/* Brand / Manufacturer */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Brand (பிராண்ட்)
+                      Brand
                     </label>
                     <input
                       type="text"
@@ -606,7 +602,7 @@ export const ProductsPage: React.FC = () => {
                   {/* Rack / Location in Shop */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Rack / Shelf (ரேக் எண்)
+                      Rack / Shelf Location
                     </label>
                     <input
                       type="text"

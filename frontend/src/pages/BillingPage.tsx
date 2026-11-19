@@ -331,13 +331,13 @@ export const BillingPage: React.FC = () => {
     setErrorMessage(null);
 
     if (amountReceived < 0) {
-      setErrorMessage('Negative values are not allowed (எதிர்மறை எண்கள் அனுமதிக்கப்படாது).');
+      setErrorMessage('Negative values are not allowed.');
       return;
     }
 
     if (totals.grandTotal > 0 && amountReceived > totals.grandTotal) {
       setErrorMessage(
-        `நீங்கள் மொத்த தொகையை (₹${totals.grandTotal.toFixed(2)}) விட அதிகமாக pay பண்ண போறீங்க! Grand total-ஐ விட அதிகமான தொகையை செலுத்த முடியாது.`
+        `Amount received cannot exceed the Grand Total (₹${totals.grandTotal.toFixed(2)}).`
       );
       return;
     }
@@ -905,10 +905,10 @@ export const BillingPage: React.FC = () => {
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
                   <div className="flex-1">
                     <span className="font-bold block">
-                      நீங்கள் மொத்த தொகையை விட அதிகமாக pay பண்ண போறீங்க!
+                      Amount entered exceeds Grand Total!
                     </span>
                     <span className="text-[11px] text-red-600">
-                      அதிகபட்ச தொகை: ₹{totals.grandTotal.toFixed(2)} (Amount cannot exceed Grand Total)
+                      Maximum allowed: ₹{totals.grandTotal.toFixed(2)}
                     </span>
                   </div>
                   <button
@@ -924,7 +924,7 @@ export const BillingPage: React.FC = () => {
               {isAmountNegative && (
                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs mt-1.5">
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-                  <span>Negative values are not allowed (எதிர்மறை எண்கள் அனுமதிக்கப்படாது).</span>
+                  <span>Negative values are not allowed.</span>
                 </div>
               )}
             </div>

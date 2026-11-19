@@ -18,8 +18,8 @@ const COMMON_GST_RATES = [0, 5, 12, 18, 28];
 
 const TEXTILE_SIZES = ['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '28', '30', '32', '34', '36', '38', '40', '42', 'Unstitched'];
 const TEXTILE_COLORS = ['White', 'Black', 'Navy Blue', 'Maroon', 'Red', 'Sky Blue', 'Pink', 'Green', 'Yellow', 'Grey', 'Cream', 'Multi'];
-const TEXTILE_FABRICS = ['Cotton', 'Pure Silk (பட்டு)', 'Art Silk', 'Linen', 'Rayon', 'Polyester', 'Denim', 'Georgette', 'Chiffon', 'Banarasi', 'Satin', 'Handloom'];
-const TEXTILE_GENDERS = ["Men's Wear (ஆண்கள்)", "Women's Wear (பெண்கள்)", "Boys (சிறுவர்கள்)", "Girls (சிறுமிகள்)", "Kids / Baby (குழந்தைகள்)", "Unisex", "Home Textiles (வீட்டு உபயோகம்)"];
+const TEXTILE_FABRICS = ['Cotton', 'Pure Silk', 'Art Silk', 'Linen', 'Rayon', 'Polyester', 'Denim', 'Georgette', 'Chiffon', 'Banarasi', 'Satin', 'Handloom'];
+const TEXTILE_GENDERS = ["Men's Wear", "Women's Wear", "Boys", "Girls", "Kids / Baby", "Unisex", "Home Textiles"];
 
 export const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,
@@ -40,7 +40,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     size: '',
     color: '',
     fabric: '',
-    gender: "Men's Wear (ஆண்கள்)",
+    gender: "Men's Wear",
     brand: '',
     rack_location: '',
     purchase_price: 0,
@@ -71,7 +71,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         size: productToEdit.size || '',
         color: productToEdit.color || '',
         fabric: productToEdit.fabric || '',
-        gender: productToEdit.gender || "Men's Wear (ஆண்கள்)",
+        gender: productToEdit.gender || "Men's Wear",
         brand: productToEdit.brand || '',
         rack_location: productToEdit.rack_location || '',
         purchase_price: productToEdit.purchase_price,
@@ -91,7 +91,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         size: '',
         color: '',
         fabric: '',
-        gender: "Men's Wear (ஆண்கள்)",
+        gender: "Men's Wear",
         brand: '',
         rack_location: '',
         purchase_price: 0,
@@ -318,27 +318,19 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           </div>
 
           {/* Textile & Garment Specifications */}
-          <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-xl space-y-3.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                Textile & Garment Details (துணி & ஆடை விவரங்கள்)
-              </span>
-              <span className="text-[10px] text-purple-600 font-medium">Size, Color, Fabric & Section</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div className="space-y-4 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Size Field with Quick Pills */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Size (அளவு) <span className="text-slate-400 font-normal">(e.g. 40, XL, Free Size)</span>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Size <span className="text-slate-400 font-normal">(e.g. 40, XL, Free Size)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Select or enter size"
                   value={formData.size || ''}
                   onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {TEXTILE_SIZES.slice(0, 10).map((sz) => (
@@ -346,10 +338,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       key={sz}
                       type="button"
                       onClick={() => setFormData({ ...formData, size: sz })}
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium border transition-colors ${
+                      className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
                         formData.size === sz
-                          ? 'bg-purple-600 text-white border-purple-600'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
                       {sz}
@@ -360,15 +352,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Color Field with Quick Pills */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Color / Shade (வண்ணம் / நிறம்)
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Color / Shade
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Navy Blue, White, Maroon"
                   value={formData.color || ''}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {TEXTILE_COLORS.slice(0, 8).map((col) => (
@@ -376,10 +368,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       key={col}
                       type="button"
                       onClick={() => setFormData({ ...formData, color: col })}
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium border transition-colors ${
+                      className={`text-[10px] px-2 py-0.5 rounded font-medium border transition-colors ${
                         formData.color === col
-                          ? 'bg-purple-600 text-white border-purple-600'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50'
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
                       {col}
@@ -389,11 +381,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Fabric / Material */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Fabric (துணி வகை)
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Fabric / Material
                 </label>
                 <input
                   type="text"
@@ -401,7 +393,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   placeholder="e.g. Cotton, Pure Silk"
                   value={formData.fabric || ''}
                   onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
                 <datalist id="fabrics-list-modal">
                   {TEXTILE_FABRICS.map((f) => (
@@ -412,13 +404,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Gender / Section */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Section (பிரிவு)
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Section
                 </label>
                 <select
                   value={formData.gender || ''}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
                 >
                   <option value="">-- Select Section --</option>
                   {TEXTILE_GENDERS.map((g) => (
@@ -431,29 +423,29 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Brand / Manufacturer */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Brand (பிராண்ட்)
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Brand
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Ramraj, Otto"
                   value={formData.brand || ''}
                   onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
 
               {/* Rack / Location in Shop */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Rack / Shelf (ரேக் எண்)
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Rack / Shelf Location
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Rack A-1"
                   value={formData.rack_location || ''}
                   onChange={(e) => setFormData({ ...formData, rack_location: e.target.value })}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-mono"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
                 />
               </div>
             </div>

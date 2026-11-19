@@ -34,7 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'products', label: 'Products', icon: Package },
     { id: 'inventory', label: 'Inventory', icon: Boxes, badge: lowStockCount > 0 ? lowStockCount : undefined },
     { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'whatsapp', label: 'WhatsApp & Offers', icon: MessageCircle },
+    // { id: 'whatsapp', label: 'WhatsApp & Offers', icon: MessageCircle },
     { id: 'history', label: 'Bill History', icon: History },
     { id: 'reports', label: 'Sales Reports', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },

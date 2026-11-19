@@ -79,8 +79,8 @@ export const App: React.FC = () => {
         return <InventoryPage />;
       case 'customers':
         return <CustomersPage />;
-      case 'whatsapp':
-        return <WhatsAppDataPage />;
+      // case 'whatsapp':
+      //   return <WhatsAppDataPage />;
       case 'history':
         return <BillHistoryPage />;
       case 'reports':
