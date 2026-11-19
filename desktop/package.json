@@ -5,7 +5,6 @@
   "description": "Native Electron Desktop Shell for VND Tech Billing Software",
   "author": "VND Tech <contact@vndtech.in>",
   "main": "dist/main.js",
-  "type": "module",
   "scripts": {
     "copy:frontend": "node -e \"const fs = require('fs'); fs.cpSync('../frontend/dist', './frontend/dist', { recursive: true });\"",
     "build": "vite build && npm run copy:frontend",
