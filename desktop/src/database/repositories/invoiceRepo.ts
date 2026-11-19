@@ -57,16 +57,20 @@ export interface InvoiceFilter {
 }
 
 export function getNextInvoiceNumber(db: Database.Database, businessId = 'biz_default_001'): string {
-  const settings = db.prepare(`
-    SELECT invoice_prefix, invoice_counter
-    FROM business_settings
-    WHERE business_id = ?
-  `).get(businessId) as any;
+  const invoices = db.prepare('SELECT invoice_number FROM invoices WHERE business_id = ?').all(businessId) as any[];
 
-  const prefix = settings?.invoice_prefix || 'VND-';
-  const counter = settings?.invoice_counter || 1001;
+  let maxSeq = 0;
+  for (const inv of invoices) {
+    if (!inv.invoice_number) continue;
+    const match = inv.invoice_number.trim().match(/INV-(?:.*-)?0*(\d+)$/i);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxSeq) maxSeq = num;
+    }
+  }
 
-  return `${prefix}${counter}`;
+  const nextSeq = maxSeq + 1;
+  return `INV-${String(nextSeq).padStart(2, '0')}`;
 }
 
 export function createInvoice(
@@ -82,22 +86,21 @@ export function createInvoice(
   const now = new Date().toISOString();
 
   const transaction = db.transaction(() => {
-    // 1. Reserve invoice number and increment counter
-    const settings = db.prepare(`
-      SELECT invoice_prefix, invoice_counter
-      FROM business_settings
-      WHERE business_id = ?
-    `).get(businessId) as any;
-
-    const prefix = settings?.invoice_prefix || 'VND-';
-    const counter = settings?.invoice_counter || 1001;
-    const invoiceNumber = `${prefix}${counter}`;
-
-    db.prepare(`
-      UPDATE business_settings
-      SET invoice_counter = invoice_counter + 1, updated_at = ?
-      WHERE business_id = ?
-    `).run(now, businessId);
+    // 1. Reserve invoice number
+    let invoiceNumber = input.invoiceNumber;
+    if (!invoiceNumber) {
+      const invoices = db.prepare('SELECT invoice_number FROM invoices WHERE business_id = ?').all(businessId) as any[];
+      let maxSeq = 0;
+      for (const inv of invoices) {
+        if (!inv.invoice_number) continue;
+        const match = inv.invoice_number.trim().match(/INV-(?:.*-)?0*(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxSeq) maxSeq = num;
+        }
+      }
+      invoiceNumber = `INV-${String(maxSeq + 1).padStart(2, '0')}`;
+    }
 
     // 2. Manage or update customer
     let custId = input.customerId;

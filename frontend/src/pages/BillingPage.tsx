@@ -15,7 +15,6 @@ import {
   AlertCircle,
   RotateCcw,
   Printer,
-  Sparkles,
 } from 'lucide-react';
 import { Product, Invoice } from '../types';
 import {
@@ -41,7 +40,7 @@ interface CartLineItem {
 
 export const BillingPage: React.FC = () => {
   // Invoice header
-  const [invoiceNumber, setInvoiceNumber] = useState('VND-Loading...');
+  const [invoiceNumber, setInvoiceNumber] = useState('Loading...');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [isInterstate, setIsInterstate] = useState(false);
 
@@ -452,7 +451,7 @@ export const BillingPage: React.FC = () => {
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs grid grid-cols-1 lg:grid-cols-4 gap-4 text-xs">
         {/* Invoice Number & Date */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center border border-red-100 flex-shrink-0">
             <Receipt className="w-5 h-5" />
           </div>
           <div>
@@ -471,7 +470,7 @@ export const BillingPage: React.FC = () => {
             <select
               value={selectedCustomerId}
               onChange={(e) => handleCustomerSelect(e.target.value)}
-              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20"
             >
               <option value="">Walk-in Customer</option>
               {customers.map((c) => (
@@ -491,7 +490,7 @@ export const BillingPage: React.FC = () => {
               placeholder="Customer name"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20"
             />
           </div>
 
@@ -504,7 +503,7 @@ export const BillingPage: React.FC = () => {
               placeholder="10-digit mobile"
               value={customerMobile}
               onChange={(e) => setCustomerMobile(e.target.value)}
-              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20"
             />
           </div>
         </div>
@@ -524,7 +523,7 @@ export const BillingPage: React.FC = () => {
               onChange={(e) => handleToggleInterstate(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
           </label>
         </div>
       </div>
@@ -536,7 +535,7 @@ export const BillingPage: React.FC = () => {
           {/* Barcode & Product Search Input */}
           <div className="relative bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2">
-              <QrCode className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <QrCode className="w-5 h-5 text-red-600 flex-shrink-0" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -544,7 +543,7 @@ export const BillingPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
+                className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800"
               />
             </div>
 
@@ -555,18 +554,18 @@ export const BillingPage: React.FC = () => {
                   <div
                     key={p.id}
                     onClick={() => addToCart(p)}
-                    className="p-2.5 hover:bg-blue-50/70 cursor-pointer flex items-center justify-between text-xs transition-colors"
+                    className="p-2.5 hover:bg-red-50/70 cursor-pointer flex items-center justify-between text-xs transition-colors"
                   >
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-slate-800">{p.name}</span>
                         {p.size && (
-                          <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded border border-purple-200">
+                          <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded border border-rose-200">
                             Size: {p.size}
                           </span>
                         )}
                         {p.color && (
-                          <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded border border-blue-200">
+                          <span className="text-[10px] font-medium bg-red-50 text-red-700 px-1.5 py-0.2 rounded border border-red-200">
                             {p.color}
                           </span>
                         )}
@@ -582,7 +581,7 @@ export const BillingPage: React.FC = () => {
                       <div className="font-bold text-slate-900 text-sm">
                         ₹{p.selling_price.toFixed(2)}
                       </div>
-                      <span className="text-[10px] text-blue-600 font-semibold">+ Add Item</span>
+                      <span className="text-[10px] text-red-600 font-semibold">+ Add Item</span>
                     </div>
                   </div>
                 ))}
@@ -594,7 +593,7 @@ export const BillingPage: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="p-3 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4 text-blue-600" />
+                <ShoppingBag className="w-4 h-4 text-red-600" />
                 <h3 className="font-bold text-xs text-slate-800">
                   Cart Line Items ({cart.length})
                 </h3>
@@ -642,12 +641,12 @@ export const BillingPage: React.FC = () => {
                           <div className="font-semibold text-slate-800">{item.product.name}</div>
                           <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                             {item.product.size && (
-                              <span className="text-[10px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.2 rounded border border-purple-200">
+                              <span className="text-[10px] font-bold bg-red-50 text-red-700 px-1.5 py-0.2 rounded border border-red-200">
                                 Size: {item.product.size}
                               </span>
                             )}
                             {item.product.color && (
-                              <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded border border-blue-200">
+                              <span className="text-[10px] font-medium bg-red-50 text-red-700 px-1.5 py-0.2 rounded border border-red-200">
                                 {item.product.color}
                               </span>
                             )}
@@ -699,7 +698,7 @@ export const BillingPage: React.FC = () => {
                             step="0.01"
                             value={item.unitPrice}
                             onChange={(e) => handlePriceChange(idx, Number(e.target.value))}
-                            className="w-20 p-1 text-right bg-slate-50 border border-slate-200 rounded font-mono font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-20 p-1 text-right bg-slate-50 border border-slate-200 rounded font-mono font-medium text-xs focus:outline-none focus:ring-1 focus:ring-red-500"
                           />
                         </td>
 
@@ -714,7 +713,7 @@ export const BillingPage: React.FC = () => {
                             }}
                             value={item.discountPercent}
                             onChange={(e) => handleDiscountChange(idx, Math.max(0, Math.min(100, Number(e.target.value) || 0)), true)}
-                            className="w-14 p-1 text-right bg-slate-50 border border-slate-200 rounded font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-14 p-1 text-right bg-slate-50 border border-slate-200 rounded font-mono text-xs focus:outline-none focus:ring-1 focus:ring-red-500"
                           />
                         </td>
 
@@ -725,7 +724,7 @@ export const BillingPage: React.FC = () => {
 
                         {/* GST Rate & Tax Amount */}
                         <td className="py-2.5 px-2 text-center">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
                             {item.calc.gstRate}%
                           </span>
                           <div className="text-[9px] text-slate-400 mt-0.5">
@@ -843,7 +842,7 @@ export const BillingPage: React.FC = () => {
               {/* Grand Total */}
               <div className="flex justify-between items-center text-sm font-bold text-slate-900 border-t-2 border-slate-300 pt-3">
                 <span>Grand Total</span>
-                <span className="text-xl font-mono text-blue-600">
+                <span className="text-xl font-mono text-red-600">
                   {formatCurrency(totals.grandTotal)}
                 </span>
               </div>
@@ -879,7 +878,7 @@ export const BillingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleQuickPayFull}
-                  className="text-[10px] text-blue-600 hover:text-blue-800 font-bold"
+                  className="text-[10px] text-red-600 hover:text-red-800 font-bold"
                 >
                   Exact Cash (₹{totals.grandTotal})
                 </button>
@@ -896,7 +895,7 @@ export const BillingPage: React.FC = () => {
                 className={`w-full p-2 rounded-lg font-bold text-base font-mono focus:outline-none transition-colors ${
                   isAmountExceeded || isAmountNegative
                     ? 'bg-red-50 border-2 border-red-500 text-red-700 focus:ring-2 focus:ring-red-500/20'
-                    : 'bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-blue-500/20'
+                    : 'bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-red-500/20'
                 }`}
               />
 
@@ -973,7 +972,7 @@ export const BillingPage: React.FC = () => {
             <button
               onClick={handleFinalizeInvoice}
               disabled={isSubmitting || cart.length === 0 || isAmountExceeded || isAmountNegative}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:from-red-800 active:to-rose-800 text-white font-bold rounded-xl shadow-md shadow-red-600/30 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle2 className="w-5 h-5" />
               <span>{isSubmitting ? 'Finalizing Invoice...' : 'Save & Print Invoice'}</span>

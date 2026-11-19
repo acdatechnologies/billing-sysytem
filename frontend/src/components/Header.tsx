@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-4">
         {/* Business Badge */}
         <div className="hidden lg:flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700">
-          <Store className="w-3.5 h-3.5 text-blue-600" />
+          <Store className="w-3.5 h-3.5 text-rose-600" />
           <span>{businessInfo?.name || 'VND Tech Enterprises'}</span>
           {businessInfo?.gstin && (
             <span className="text-[10px] text-slate-400 font-normal border-l border-slate-300 pl-2">
@@ -107,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
         {activeTab !== 'billing' && (
           <button
             onClick={onNewBill}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm shadow-blue-600/30 transition-all duration-150"
+            className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:from-red-800 active:to-rose-800 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md shadow-red-600/25 transition-all duration-150"
           >
             <PlusCircle className="w-4 h-4" />
             <span>+ New Bill</span>

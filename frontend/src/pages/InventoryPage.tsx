@@ -18,12 +18,13 @@ import {
   Save,
   ArrowRight,
   AlertCircle,
-  Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 import { Product, StockMovement, InventorySummary, StockAdjustmentInput } from '../types';
 import { inventoryApi } from '../api/inventoryApi';
 import { productApi } from '../api/productApi';
 import { validateStockAdjustment } from '../utils/validators';
+import { Pagination, DateRangeFilter, useTablePagination } from '../components/common';
 
 export const InventoryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'STOCK' | 'LOGS'>('STOCK');
@@ -45,6 +46,30 @@ export const InventoryPage: React.FC = () => {
   const [stockStatusFilter, setStockStatusFilter] = useState<'ALL' | 'LOW' | 'OUT' | 'HEALTHY'>('ALL');
   const [selectedGender, setSelectedGender] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
+
+  // Pagination & Date Filter Hook for Inventory Stock
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    totalItems,
+    startDate,
+    endDate,
+    setDateRange,
+    clearDateFilter,
+    paginatedItems: paginatedProducts,
+    getSerialNumber,
+  } = useTablePagination<Product>({
+    items: products,
+    initialPageSize: 10,
+    dateField: 'created_at',
+  });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, stockStatusFilter, selectedGender, selectedSize, setCurrentPage]);
 
   // Stock Adjustment Form State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -148,17 +173,17 @@ export const InventoryPage: React.FC = () => {
   const getMovementBadge = (type: StockMovement['movement_type']) => {
     switch (type) {
       case 'RESTOCK':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Restock Intake</span>;
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Restock Intake</span>;
       case 'DAMAGE':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">Damaged / Lost</span>;
       case 'CORRECTION':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Physical Count</span>;
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Physical Count</span>;
       case 'RETURN':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Customer Return</span>;
       case 'OPENING_STOCK':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">Opening Stock</span>;
       case 'SALE':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Invoice Sale</span>;
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">Invoice Sale</span>;
       case 'CANCELLATION':
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Bill Cancelled</span>;
       default:
@@ -188,13 +213,13 @@ export const InventoryPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs">
             <button
               onClick={() => setView('LIST')}
-              className="text-slate-500 hover:text-purple-600 font-medium flex items-center gap-1 transition-colors"
+              className="text-slate-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
             >
               <Boxes className="w-4 h-4 text-slate-400" />
               <span>Inventory</span>
             </button>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            <span className="text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
               Stock Adjustment: {selectedProduct.name}
             </span>
           </div>
@@ -211,7 +236,7 @@ export const InventoryPage: React.FC = () => {
         {/* Form Card */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center">
               <Boxes className="w-5 h-5" />
             </div>
             <div>
@@ -236,7 +261,7 @@ export const InventoryPage: React.FC = () => {
                 <span className="text-2xs font-bold uppercase text-slate-400">Current Stock</span>
                 <div className="text-2xl font-bold text-slate-700 font-mono">{curStock} {selectedProduct.unit}</div>
               </div>
-              <ArrowRight className="w-5 h-5 text-purple-400" />
+              <ArrowRight className="w-5 h-5 text-rose-400" />
               <div className="text-center">
                 <span className="text-2xs font-bold uppercase text-slate-400">Resulting Stock</span>
                 <div className={`text-2xl font-bold font-mono ${resultingStock < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
@@ -252,8 +277,8 @@ export const InventoryPage: React.FC = () => {
                 {[
                   { id: 'RESTOCK', label: 'Restock / Intake', color: 'text-emerald-700 border-emerald-300 bg-emerald-50' },
                   { id: 'DAMAGE', label: 'Damage / Loss', color: 'text-red-700 border-red-300 bg-red-50' },
-                  { id: 'RETURN', label: 'Customer Return', color: 'text-blue-700 border-blue-300 bg-blue-50' },
-                  { id: 'CORRECTION', label: 'Audit Count', color: 'text-purple-700 border-purple-300 bg-purple-50' },
+                  { id: 'RETURN', label: 'Customer Return', color: 'text-rose-700 border-rose-300 bg-rose-50' },
+                  { id: 'CORRECTION', label: 'Audit Count', color: 'text-red-700 border-red-300 bg-red-50' },
                 ].map((type) => (
                   <button
                     key={type.id}
@@ -261,7 +286,7 @@ export const InventoryPage: React.FC = () => {
                     onClick={() => setAdjustmentType(type.id as any)}
                     className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${
                       adjustmentType === type.id
-                        ? `${type.color} ring-2 ring-purple-500/20`
+                        ? `${type.color} ring-2 ring-red-500/20`
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
@@ -282,7 +307,7 @@ export const InventoryPage: React.FC = () => {
                 required
                 value={adjustmentQty}
                 onChange={(e) => setAdjustmentQty(parseFloat(e.target.value) || 0)}
-                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
             </div>
 
@@ -294,7 +319,7 @@ export const InventoryPage: React.FC = () => {
                 value={adjustmentNotes}
                 onChange={(e) => setAdjustmentNotes(e.target.value)}
                 placeholder="e.g. Received shipment from distributor"
-                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
             </div>
 
@@ -310,7 +335,7 @@ export const InventoryPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg shadow-sm shadow-red-600/30 transition-all"
               >
                 <Save className="w-4 h-4" />
                 {isSubmitting ? 'Updating...' : 'Commit Stock Adjustment'}
@@ -331,7 +356,7 @@ export const InventoryPage: React.FC = () => {
       {feedbackMessage && (
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{feedbackMessage}</span>
           </div>
           <button onClick={() => setFeedbackMessage(null)} className="text-slate-400 hover:text-slate-600">✕</button>
@@ -377,7 +402,7 @@ export const InventoryPage: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Stock Value (Cost)
                 </span>
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
                   <IndianRupee className="w-4 h-4" />
                 </div>
               </div>
@@ -443,7 +468,7 @@ export const InventoryPage: React.FC = () => {
           onClick={() => setActiveTab('STOCK')}
           className={`flex items-center gap-2 py-2.5 px-4 text-xs font-bold rounded-lg transition-colors ${
             activeTab === 'STOCK'
-              ? 'bg-purple-50 text-purple-700'
+              ? 'bg-red-50 text-red-700'
               : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
           }`}
         >
@@ -455,7 +480,7 @@ export const InventoryPage: React.FC = () => {
           onClick={() => setActiveTab('LOGS')}
           className={`flex items-center gap-2 py-2.5 px-4 text-xs font-bold rounded-lg transition-colors ${
             activeTab === 'LOGS'
-              ? 'bg-purple-50 text-purple-700'
+              ? 'bg-red-50 text-red-700'
               : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
           }`}
         >
@@ -476,7 +501,7 @@ export const InventoryPage: React.FC = () => {
                 placeholder="Search stock by item, size, color, rack..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
             </div>
 
@@ -485,7 +510,7 @@ export const InventoryPage: React.FC = () => {
               <select
                 value={selectedGender}
                 onChange={(e) => setSelectedGender(e.target.value)}
-                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
+                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 text-slate-700 font-medium"
               >
                 <option value="">All Sections</option>
                 <option value="Men">Men's Wear</option>
@@ -500,7 +525,7 @@ export const InventoryPage: React.FC = () => {
               <select
                 value={selectedSize}
                 onChange={(e) => setSelectedSize(e.target.value)}
-                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
+                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 text-slate-700 font-medium"
               >
                 <option value="">All Sizes</option>
                 {['Free Size', 'S', 'M', 'L', 'XL', 'XXL', '28', '30', '32', '34', '36', '38', '40', '42', 'Unstitched'].map((sz) => (
@@ -514,13 +539,21 @@ export const InventoryPage: React.FC = () => {
               <select
                 value={stockStatusFilter}
                 onChange={(e) => setStockStatusFilter(e.target.value as any)}
-                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
+                className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 text-slate-700 font-medium"
               >
                 <option value="ALL">All Stock</option>
                 <option value="LOW">Low Stock Only</option>
                 <option value="OUT">Out of Stock Only</option>
                 <option value="HEALTHY">In Stock (Healthy)</option>
               </select>
+
+              {/* Date Range Filter */}
+              <DateRangeFilter
+                startDate={startDate}
+                endDate={endDate}
+                onChange={setDateRange}
+                onClear={clearDateFilter}
+              />
             </div>
           </div>
 
@@ -530,6 +563,7 @@ export const InventoryPage: React.FC = () => {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
                   <tr>
+                    <th className="py-3 px-3 font-semibold text-center w-12">S.No</th>
                     <th className="py-3 px-4 font-semibold">Product Name</th>
                     <th className="py-3 px-3 font-semibold">SKU / Code</th>
                     <th className="py-3 px-3 font-semibold text-right">Cost Price</th>
@@ -541,22 +575,32 @@ export const InventoryPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {products.map((item) => {
-                    const isOutOfStock = item.current_stock <= 0;
-                    const isLowStock = item.current_stock <= item.minimum_stock && !isOutOfStock;
+                  {paginatedProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-8 text-center text-slate-400">
+                        No inventory stock items matching the selected filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedProducts.map((item, index) => {
+                      const isOutOfStock = item.current_stock <= 0;
+                      const isLowStock = item.current_stock <= item.minimum_stock && !isOutOfStock;
 
-                    return (
-                      <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3 px-4">
+                      return (
+                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-3 text-center font-mono font-bold text-slate-500">
+                            {getSerialNumber(index)}
+                          </td>
+                          <td className="py-3 px-4">
                           <div className="font-semibold text-slate-800">{item.name}</div>
                           <div className="flex flex-wrap items-center gap-1.5 mt-1">
                             {item.size && (
-                              <span className="text-[10px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">
+                              <span className="text-[10px] font-bold bg-rose-50 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200">
                                 Size: {item.size}
                               </span>
                             )}
                             {item.color && (
-                              <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
+                              <span className="text-[10px] font-medium bg-red-50 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
                                 {item.color}
                               </span>
                             )}
@@ -577,7 +621,7 @@ export const InventoryPage: React.FC = () => {
                           </div>
                         </td>
 
-                        <td className="py-3 px-3 font-mono font-semibold text-purple-700">{item.code}</td>
+                        <td className="py-3 px-3 font-mono font-semibold text-red-700">{item.code}</td>
 
                         <td className="py-3 px-3 text-right font-mono text-slate-500">
                           {formatCurrency(item.purchase_price)}
@@ -621,7 +665,7 @@ export const InventoryPage: React.FC = () => {
                         <td className="py-3 px-4 text-center">
                           <button
                             onClick={() => handleOpenAdjustment(item)}
-                            className="inline-flex items-center gap-1 px-3 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-2xs font-semibold transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-2xs font-semibold transition-colors"
                           >
                             <Boxes className="w-3.5 h-3.5" />
                             <span>Adjust Stock</span>
@@ -629,10 +673,23 @@ export const InventoryPage: React.FC = () => {
                         </td>
                       </tr>
                     );
-                  })}
-                </tbody>
+                  })
+                )}
+              </tbody>
               </table>
             </div>
+
+            {/* Inventory Stock Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[10, 25, 50, 100]}
+              itemName="stock items"
+            />
           </div>
         </div>
       )}

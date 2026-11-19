@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Sparkles, FolderPlus, AlertCircle } from 'lucide-react';
+import { X, Save, FolderPlus, AlertCircle } from 'lucide-react';
 import { Product, ProductInput, ProductCategory } from '../types';
 import { productApi } from '../api/productApi';
 import { validateProduct } from '../utils/validators';
@@ -140,19 +140,36 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCatName.trim()) {
+    const trimmed = newCatName.trim();
+    if (!trimmed) {
       setCatError('Category name is required.');
       return;
     }
+
+    // If category already exists in the list, automatically select it
+    const existing = categories.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+    if (existing) {
+      setFormData((prev) => ({ ...prev, category_id: existing.id }));
+      setNewCatName('');
+      setShowAddCategory(false);
+      setCatError(null);
+      return;
+    }
+
     try {
-      const created = await productApi.createCategory(newCatName.trim());
+      const created = await productApi.createCategory(trimmed);
       onCategoryCreated(created);
       setFormData((prev) => ({ ...prev, category_id: created.id }));
       setNewCatName('');
       setShowAddCategory(false);
       setCatError(null);
     } catch (err: any) {
-      setCatError(err.message || 'Failed to create category');
+      const msg = err.message || '';
+      if (msg.includes('11000') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('already exists')) {
+        setCatError(`Category "${trimmed}" already exists. Please choose another name.`);
+      } else {
+        setCatError(msg || 'Failed to create category');
+      }
     }
   };
 
@@ -180,10 +197,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
     try {
       setIsSubmitting(true);
+      const catObj = categories.find((c) => c.id === formData.category_id);
+      const submissionData = {
+        ...formData,
+        category_name: catObj ? catObj.name : '',
+      };
       if (isEditing && productToEdit) {
-        await productApi.updateProduct(productToEdit.id, formData as any);
+        await productApi.updateProduct(productToEdit.id, submissionData as any);
       } else {
-        await productApi.createProduct(formData as any);
+        await productApi.createProduct(submissionData as any);
       }
       onSaved();
       onClose();
@@ -253,7 +275,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="e.g. Cotton Formal Shirt"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-medium"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800 font-medium"
               />
             </div>
           </div>
@@ -269,7 +291,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="Scan or enter barcode"
                 value={formData.barcode}
                 onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800"
               />
             </div>
 
@@ -279,14 +301,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddCategory(!showAddCategory)}
-                  className="text-[11px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                  className="text-[11px] text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
                 >
                   <FolderPlus className="w-3 h-3" /> + New Category
                 </button>
               </div>
 
               {showAddCategory ? (
-                <div className="p-2 bg-blue-50/70 border border-blue-200 rounded-lg space-y-2">
+                <div className="p-2 bg-red-50/70 border border-red-200 rounded-lg space-y-2">
                   <input
                     type="text"
                     placeholder="New category name"
@@ -306,7 +328,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     <button
                       type="button"
                       onClick={handleCreateCategory}
-                      className="px-2.5 py-1 text-[11px] bg-blue-600 text-white rounded font-medium"
+                      className="px-2.5 py-1 text-[11px] bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 text-white rounded font-medium"
                     >
                       Save Category
                     </button>
@@ -316,7 +338,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-medium"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800 font-medium"
                 >
                   <option value="">-- Select Category --</option>
                   {categories.map((c) => (
@@ -341,7 +363,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     setIsCustomSize(!isCustomSize);
                     if (!isCustomSize) setFormData((prev) => ({ ...prev, size: '' }));
                   }}
-                  className="text-2xs text-blue-600 font-semibold hover:underline"
+                  className="text-2xs text-red-600 font-semibold hover:underline"
                 >
                   {isCustomSize ? 'Presets' : '+ Custom'}
                 </button>
@@ -352,7 +374,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   placeholder="e.g. 40, XL, Free Size"
                   value={formData.size || ''}
                   onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 />
               ) : (
                 <select
@@ -365,7 +387,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       setFormData({ ...formData, size: e.target.value });
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 >
                   <option value="">-- Select Size --</option>
                   {TEXTILE_SIZES.map((sz) => (
@@ -388,7 +410,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     setIsCustomColor(!isCustomColor);
                     if (!isCustomColor) setFormData((prev) => ({ ...prev, color: '' }));
                   }}
-                  className="text-2xs text-blue-600 font-semibold hover:underline"
+                  className="text-2xs text-red-600 font-semibold hover:underline"
                 >
                   {isCustomColor ? 'Presets' : '+ Custom'}
                 </button>
@@ -399,7 +421,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   placeholder="e.g. Navy Blue, White, Maroon"
                   value={formData.color || ''}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 />
               ) : (
                 <select
@@ -412,7 +434,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       setFormData({ ...formData, color: e.target.value });
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 >
                   <option value="">-- Select Color --</option>
                   {TEXTILE_COLORS.map((col) => (
@@ -435,7 +457,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     setIsCustomFabric(!isCustomFabric);
                     if (!isCustomFabric) setFormData((prev) => ({ ...prev, fabric: '' }));
                   }}
-                  className="text-2xs text-blue-600 font-semibold hover:underline"
+                  className="text-2xs text-red-600 font-semibold hover:underline"
                 >
                   {isCustomFabric ? 'Presets' : '+ Custom'}
                 </button>
@@ -446,7 +468,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   placeholder="e.g. Cotton, Pure Silk"
                   value={formData.fabric || ''}
                   onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 />
               ) : (
                 <select
@@ -459,7 +481,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       setFormData({ ...formData, fabric: e.target.value });
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 >
                   <option value="">-- Select Fabric --</option>
                   {TEXTILE_FABRICS.map((f) => (
@@ -480,7 +502,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               <select
                 value={formData.gender || ''}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-medium"
               >
                 <option value="">-- Select Section --</option>
                 {TEXTILE_GENDERS.map((g) => (
@@ -501,7 +523,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="e.g. Ramraj, Otto"
                 value={formData.brand || ''}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
             </div>
 
@@ -515,40 +537,23 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="e.g. Rack A-1"
                 value={formData.rack_location || ''}
                 onChange={(e) => setFormData({ ...formData, rack_location: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-mono"
               />
             </div>
           </div>
 
-          {/* Row 3: Unit, HSN Code, GST Rate */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                Measurement Unit
-              </label>
-              <select
-                value={formData.unit}
-                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-medium"
-              >
-                {COMMON_UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+          {/* Row 3: HSN Code & GST Rate */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
                 HSN / SAC Code
               </label>
               <input
                 type="text"
-                placeholder="e.g. 844332"
+                placeholder="e.g. 6205 (Garments)"
                 value={formData.hsn_code}
                 onChange={(e) => setFormData({ ...formData, hsn_code: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800"
               />
             </div>
 
@@ -567,7 +572,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         setFormData({ ...formData, gst_rate: Number(e.target.value) });
                       }
                     }}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-semibold"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800 font-semibold"
                   >
                     {COMMON_GST_RATES.map((rate) => (
                       <option key={rate} value={rate}>
@@ -617,7 +622,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="0.00"
                 value={formData.purchase_price}
                 onChange={(e) => setFormData({ ...formData, purchase_price: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-semibold"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800 font-semibold"
               />
               <p className="text-[10px] text-slate-400 mt-0.5">Used for inventory valuation & profits</p>
             </div>
@@ -634,7 +639,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 placeholder="0.00"
                 value={formData.selling_price}
                 onChange={(e) => setFormData({ ...formData, selling_price: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 font-bold text-sm"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 font-bold text-sm"
               />
               <p className="text-[10px] text-slate-400 mt-0.5">Unit billing price charged to customer</p>
             </div>
@@ -653,7 +658,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   min="0"
                   value={formData.opening_stock}
                   onChange={(e) => setFormData({ ...formData, opening_stock: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-semibold"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800 font-semibold"
                 />
                 <p className="text-[10px] text-slate-400 mt-0.5">Initial stock in hand today</p>
               </div>
@@ -669,7 +674,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 min="0"
                 value={formData.minimum_stock}
                 onChange={(e) => setFormData({ ...formData, minimum_stock: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 font-semibold"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800 font-semibold"
               />
               <p className="text-[10px] text-slate-400 mt-0.5">
                 Triggers dashboard low stock warnings when stock falls to or below this count
@@ -690,7 +695,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-5 py-2 rounded-lg font-semibold shadow-xs shadow-blue-600/30 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:from-red-800 text-white px-5 py-2 rounded-lg font-semibold shadow-md shadow-red-600/30 transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{isSubmitting ? 'Saving...' : isEditing ? 'Update Product' : 'Save Product'}</span>

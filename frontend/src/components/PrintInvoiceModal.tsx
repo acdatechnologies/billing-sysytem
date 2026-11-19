@@ -126,7 +126,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
         {/* Top Control Bar */}
         <div className="px-6 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
               <Printer className="w-4 h-4" />
             </div>
             <div>
@@ -211,7 +211,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                 type="checkbox"
                 checked={isSilent}
                 onChange={(e) => setIsSilent(e.target.checked)}
-                className="w-3.5 h-3.5 text-blue-600 rounded"
+                className="w-3.5 h-3.5 text-red-600 rounded focus:ring-red-500"
               />
               <span>Silent Print (No Dialog)</span>
             </label>
@@ -223,14 +223,14 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
               disabled={isExporting}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-xs transition-colors disabled:opacity-50"
             >
-              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <Download className="w-3.5 h-3.5 text-red-600" />
               <span>{isExporting ? 'Exporting...' : 'Save as PDF'}</span>
             </button>
 
             <button
               onClick={handlePrint}
               disabled={isPrinting}
-              className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs shadow-blue-600/30 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-lg shadow-xs shadow-red-600/30 transition-all disabled:opacity-50"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>{isPrinting ? 'Printing...' : 'Print Now'}</span>
@@ -419,7 +419,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                   </div>
 
                   <div className="text-right">
-                    <span className="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 font-bold text-xs uppercase tracking-wider rounded inline-block">
+                    <span className="px-3 py-1 bg-red-50 border border-red-200 text-red-700 font-bold text-xs uppercase tracking-wider rounded inline-block">
                       TAX INVOICE
                     </span>
                     <div className="text-lg font-mono font-bold text-slate-900 mt-2">
@@ -565,7 +565,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                     )}
                     <div className="flex justify-between items-center text-sm font-bold text-slate-900 border-t-2 border-slate-300 pt-2">
                       <span>Grand Total:</span>
-                      <span className="text-base text-blue-600 font-mono">₹{invoice.grand_total.toFixed(2)}</span>
+                      <span className="text-base text-red-600 font-mono">₹{invoice.grand_total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

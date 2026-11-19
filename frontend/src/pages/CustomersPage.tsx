@@ -14,7 +14,7 @@ import {
   RefreshCw,
   Eye,
   IndianRupee,
-  Sparkles,
+  CheckCircle2,
   ChevronRight,
   ArrowLeft,
   Save,
@@ -28,6 +28,7 @@ import { Customer, CustomerInput } from '../types';
 import { customerApi } from '../api/customerApi';
 import { whatsappApi } from '../api/whatsappApi';
 import { validateCustomer } from '../utils/validators';
+import { Pagination, DateRangeFilter, useTablePagination } from '../components/common';
 
 export const CustomersPage: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -40,6 +41,31 @@ export const CustomersPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [consentOnly, setConsentOnly] = useState(false);
   const [repeatOnly, setRepeatOnly] = useState(false);
+
+  // Pagination & Date Filter Hook
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    totalItems,
+    startDate,
+    endDate,
+    setDateRange,
+    clearDateFilter,
+    paginatedItems: paginatedCustomers,
+    getSerialNumber,
+  } = useTablePagination<Customer>({
+    items: customers,
+    initialPageSize: 10,
+    dateField: 'created_at',
+  });
+
+  // Reset page when search or toggles change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, consentOnly, repeatOnly, setCurrentPage]);
 
   // Form State
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
@@ -212,13 +238,13 @@ export const CustomersPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs">
             <button
               onClick={() => setView('LIST')}
-              className="text-slate-500 hover:text-purple-600 font-medium flex items-center gap-1 transition-colors"
+              className="text-slate-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
             >
               <Users className="w-4 h-4 text-slate-400" />
               <span>Customers</span>
             </button>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            <span className="text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
               {customerToEdit ? `Edit: ${customerToEdit.name}` : 'Register New Customer'}
             </span>
           </div>
@@ -235,7 +261,7 @@ export const CustomersPage: React.FC = () => {
         {/* Full-Page Form Card */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center">
               <UserCheck className="w-5 h-5" />
             </div>
             <div>
@@ -268,7 +294,7 @@ export const CustomersPage: React.FC = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Senthil Kumar"
-                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 />
               </div>
 
@@ -286,7 +312,7 @@ export const CustomersPage: React.FC = () => {
                     value={formData.mobile}
                     onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })}
                     placeholder="10-digit mobile"
-                    className="w-full text-xs pl-12 pr-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs pl-12 pr-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                 </div>
                 <span className="text-[11px] text-slate-400 mt-1 block">Used for duplicate matching and WhatsApp PDF sharing</span>
@@ -302,7 +328,7 @@ export const CustomersPage: React.FC = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="customer@example.com"
-                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 />
               </div>
 
@@ -317,7 +343,7 @@ export const CustomersPage: React.FC = () => {
                   value={formData.gstin}
                   onChange={(e) => setFormData({ ...formData, gstin: e.target.value.toUpperCase() })}
                   placeholder="e.g. 33AAAAA0000A1Z5"
-                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 />
               </div>
 
@@ -331,7 +357,7 @@ export const CustomersPage: React.FC = () => {
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Door No, Street name, City, Pincode"
-                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                 />
               </div>
             </div>
@@ -369,7 +395,7 @@ export const CustomersPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg shadow-sm shadow-red-600/30 transition-all"
               >
                 <Save className="w-4 h-4" />
                 {isSubmitting ? 'Saving...' : customerToEdit ? 'Update Customer' : 'Save Customer'}
@@ -392,13 +418,13 @@ export const CustomersPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs">
             <button
               onClick={() => setView('LIST')}
-              className="text-slate-500 hover:text-purple-600 font-medium flex items-center gap-1 transition-colors"
+              className="text-slate-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
             >
               <Users className="w-4 h-4 text-slate-400" />
               <span>Customers</span>
             </button>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            <span className="text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
               {selectedCustomer.name} (Profile)
             </span>
           </div>
@@ -406,7 +432,7 @@ export const CustomersPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleOpenEdit(selectedCustomer)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
             >
               <Edit2 className="w-3.5 h-3.5" />
               Edit Profile
@@ -426,7 +452,7 @@ export const CustomersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 font-bold text-xl flex items-center justify-center border border-purple-200">
+              <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-700 font-bold text-xl flex items-center justify-center border border-red-200">
                 {selectedCustomer.name.slice(0, 2).toUpperCase()}
               </div>
               <div>
@@ -482,7 +508,7 @@ export const CustomersPage: React.FC = () => {
 
             <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
               <span className="text-[10px] uppercase font-bold text-slate-400">Total Invoices Issued</span>
-              <div className="text-lg font-bold text-purple-700 font-mono mt-0.5">
+              <div className="text-lg font-bold text-red-700 font-mono mt-0.5">
                 {selectedCustomer.total_bills} Bills
               </div>
             </div>
@@ -502,7 +528,7 @@ export const CustomersPage: React.FC = () => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-purple-600" />
+              <Receipt className="w-4 h-4 text-red-600" />
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Purchase History Ledger</h3>
             </div>
           </div>
@@ -523,7 +549,7 @@ export const CustomersPage: React.FC = () => {
                 <tbody className="divide-y divide-slate-100">
                   {selectedCustomer.invoices.map((inv) => (
                     <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-2.5 px-4 font-mono font-bold text-purple-700">{inv.invoice_number}</td>
+                      <td className="py-2.5 px-4 font-mono font-bold text-red-700">{inv.invoice_number}</td>
                       <td className="py-2.5 px-4 text-slate-600">{inv.invoice_date}</td>
                       <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(inv.taxable_amount)}</td>
                       <td className="py-2.5 px-4 text-right font-mono text-slate-500">
@@ -568,7 +594,7 @@ export const CustomersPage: React.FC = () => {
       {feedbackMessage && (
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{feedbackMessage}</span>
           </div>
           <button onClick={() => setFeedbackMessage(null)} className="text-slate-400 hover:text-slate-600">✕</button>
@@ -582,7 +608,7 @@ export const CustomersPage: React.FC = () => {
             <span className="text-[10px] text-slate-400 font-bold uppercase">Total Customers</span>
             <div className="text-xl font-bold text-slate-800 font-mono mt-0.5">{totalCustomers}</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
             <Users className="w-5 h-5" />
           </div>
         </div>
@@ -600,9 +626,9 @@ export const CustomersPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] text-slate-400 font-bold uppercase">Repeat Shoppers</span>
-            <div className="text-xl font-bold text-blue-600 font-mono mt-0.5">{repeatShoppersCount}</div>
+            <div className="text-xl font-bold text-rose-600 font-mono mt-0.5">{repeatShoppersCount}</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
             <Receipt className="w-5 h-5" />
           </div>
         </div>
@@ -629,7 +655,7 @@ export const CustomersPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, 10-digit mobile, or GSTIN..."
-            className="w-full text-xs pl-9 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+            className="w-full text-xs pl-9 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
           />
         </div>
 
@@ -650,17 +676,25 @@ export const CustomersPage: React.FC = () => {
             onClick={() => setRepeatOnly(!repeatOnly)}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 ${
               repeatOnly
-                ? 'bg-blue-50 text-blue-700 border-blue-300'
+                ? 'bg-rose-50 text-rose-700 border-rose-300'
                 : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <UserCheck className="w-3.5 h-3.5" />
             Repeat Customers
           </button>
 
+          {/* Date Range Filter */}
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onChange={setDateRange}
+            onClear={clearDateFilter}
+          />
+
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-semibold shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-lg text-xs font-semibold shadow-sm shadow-red-600/30 transition-all"
           >
             <Plus className="w-4 h-4" />
             Add Customer
@@ -672,19 +706,20 @@ export const CustomersPage: React.FC = () => {
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-400 text-xs">Loading customer directory...</div>
-        ) : customers.length === 0 ? (
+        ) : paginatedCustomers.length === 0 ? (
           <div className="p-8 text-center text-slate-400">
             <Users className="w-8 h-8 mx-auto mb-2 text-slate-300" />
             <p className="text-xs font-medium">No customers found</p>
-            <button onClick={handleOpenAdd} className="mt-2 text-xs text-purple-600 hover:underline">
-              Add your first customer
-            </button>
+            <p className="text-2xs text-slate-400 mt-1">
+              {search || startDate || endDate ? 'Try clearing your search or date filter.' : 'Click "Add Customer" to create your first customer.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
                 <tr>
+                  <th className="py-2.5 px-3 text-center w-12">S.No</th>
                   <th className="py-2.5 px-4">Customer Name</th>
                   <th className="py-2.5 px-4">Mobile Number</th>
                   <th className="py-2.5 px-4">GSTIN</th>
@@ -695,8 +730,11 @@ export const CustomersPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {customers.map((c) => (
+                {paginatedCustomers.map((c, index) => (
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-500">
+                      {getSerialNumber(index)}
+                    </td>
                     <td className="py-2.5 px-4">
                       <div className="font-semibold text-slate-800">{c.name}</div>
                       {c.address && <div className="text-[10px] text-slate-400 truncate max-w-xs">{c.address}</div>}
@@ -732,14 +770,14 @@ export const CustomersPage: React.FC = () => {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleOpenDetail(c)}
-                          className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded"
+                          className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded"
                           title="View Profile & Invoices"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleOpenEdit(c)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                          className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded"
                           title="Edit Customer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -766,6 +804,18 @@ export const CustomersPage: React.FC = () => {
             </table>
           </div>
         )}
+
+        {/* Customer Directory Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={[10, 25, 50, 100]}
+          itemName="customers"
+        />
       </div>
 
       {/* Delete Confirmation Alert */}

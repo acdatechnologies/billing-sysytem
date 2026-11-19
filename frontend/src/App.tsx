@@ -132,7 +132,7 @@ export const App: React.FC = () => {
                 href="https://vndtech.in"
                 target="_blank"
                 rel="noreferrer"
-                className="text-blue-600 hover:underline font-medium"
+                className="text-red-600 hover:underline font-medium"
               >
                 vndtech.in
               </a>

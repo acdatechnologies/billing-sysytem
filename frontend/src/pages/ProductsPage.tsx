@@ -20,13 +20,13 @@ import {
   MinusCircle,
   CheckCircle2,
   ArrowRight,
-  Sparkles,
   Layers,
 } from 'lucide-react';
 import { Product, ProductCategory, ProductInput, StockAdjustmentInput } from '../types';
 import { productApi } from '../api/productApi';
 import { inventoryApi } from '../api/inventoryApi';
 import { validateProduct, validateStockAdjustment } from '../utils/validators';
+import { Pagination, DateRangeFilter, useTablePagination } from '../components/common';
 
 const COMMON_UNITS = ['PCS', 'MTR', 'SET', 'BOX', 'ROLL', 'PKT', 'DOZ'];
 const COMMON_GST_RATES = [0, 5, 12, 18, 28];
@@ -50,6 +50,31 @@ export const ProductsPage: React.FC = () => {
   const [selectedGender, setSelectedGender] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'HEALTHY' | 'LOW' | 'OUT'>('ALL');
+
+  // Pagination & Date Filter Hook
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    totalItems,
+    startDate,
+    endDate,
+    setDateRange,
+    clearDateFilter,
+    paginatedItems: paginatedProducts,
+    getSerialNumber,
+  } = useTablePagination<Product>({
+    items: products,
+    initialPageSize: 10,
+    dateField: 'created_at',
+  });
+
+  // Reset page when search or dropdown filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory, selectedGender, selectedSize, stockFilter, setCurrentPage]);
 
   // Product Form State (Add / Edit)
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -225,11 +250,16 @@ export const ProductsPage: React.FC = () => {
 
     try {
       setIsSubmitting(true);
+      const catObj = categories.find((c) => c.id === formData.category_id);
+      const submissionData = {
+        ...formData,
+        category_name: catObj ? catObj.name : '',
+      };
       if (productToEdit) {
-        await productApi.updateProduct(productToEdit.id, formData);
+        await productApi.updateProduct(productToEdit.id, submissionData);
         setFeedbackMessage(`Product "${formData.name}" updated successfully!`);
       } else {
-        await productApi.createProduct(formData);
+        await productApi.createProduct(submissionData);
         setFeedbackMessage(`Product "${formData.name}" added successfully!`);
       }
       await fetchData();
@@ -244,16 +274,33 @@ export const ProductsPage: React.FC = () => {
 
   // Handle Quick Category Create
   const handleCreateCategory = async () => {
-    if (!newCatName.trim()) return;
+    const trimmed = newCatName.trim();
+    if (!trimmed) return;
+
+    // If it already exists in the list, just select it
+    const existing = categories.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+    if (existing) {
+      setFormData({ ...formData, category_id: existing.id });
+      setNewCatName('');
+      setShowAddCategory(false);
+      setCatError(null);
+      return;
+    }
+
     try {
       setCatError(null);
-      const cat = await productApi.createCategory(newCatName.trim());
+      const cat = await productApi.createCategory(trimmed);
       setCategories([...categories, cat]);
       setFormData({ ...formData, category_id: cat.id });
       setNewCatName('');
       setShowAddCategory(false);
     } catch (err: any) {
-      setCatError(err.message || 'Failed to create category');
+      const msg = err.message || '';
+      if (msg.includes('11000') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('already exists')) {
+        setCatError(`Category "${trimmed}" already exists. Please choose another name.`);
+      } else {
+        setCatError(msg || 'Failed to create category');
+      }
     }
   };
 
@@ -333,13 +380,13 @@ export const ProductsPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs">
             <button
               onClick={() => setView('LIST')}
-              className="text-slate-500 hover:text-purple-600 font-medium flex items-center gap-1 transition-colors"
+              className="text-slate-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
             >
               <Package className="w-4 h-4 text-slate-400" />
               <span>Products</span>
             </button>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            <span className="text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
               {productToEdit ? `Edit: ${productToEdit.name}` : 'Add New Product'}
             </span>
           </div>
@@ -356,7 +403,7 @@ export const ProductsPage: React.FC = () => {
         {/* Full-Page Form Card */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center">
               <Package className="w-5 h-5" />
             </div>
             <div>
@@ -407,7 +454,7 @@ export const ProductsPage: React.FC = () => {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g. Cotton Formal Shirt"
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                 </div>
 
@@ -420,7 +467,7 @@ export const ProductsPage: React.FC = () => {
                     value={formData.barcode || ''}
                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
                     placeholder="Scan or enter barcode"
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                 </div>
 
@@ -431,7 +478,7 @@ export const ProductsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowAddCategory(!showAddCategory)}
-                      className="text-2xs text-purple-600 font-semibold hover:underline"
+                      className="text-2xs text-red-600 font-semibold hover:underline"
                     >
                       {showAddCategory ? 'Cancel' : '+ New Category'}
                     </button>
@@ -444,12 +491,12 @@ export const ProductsPage: React.FC = () => {
                         value={newCatName}
                         onChange={(e) => setNewCatName(e.target.value)}
                         placeholder="Category name"
-                        className="flex-1 text-xs px-3 py-2 border border-purple-300 rounded-lg focus:outline-none"
+                        className="flex-1 text-xs px-3 py-2 border border-red-300 rounded-lg focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={handleCreateCategory}
-                        className="px-3 py-2 bg-purple-600 text-white rounded-lg text-xs font-semibold hover:bg-purple-700"
+                        className="px-3 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 text-white rounded-lg text-xs font-semibold"
                       >
                         Add
                       </button>
@@ -458,7 +505,7 @@ export const ProductsPage: React.FC = () => {
                     <select
                       value={formData.category_id || ''}
                       onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     >
                       <option value="">-- Select Category --</option>
                       {categories.map((c) => (
@@ -469,22 +516,6 @@ export const ProductsPage: React.FC = () => {
                     </select>
                   )}
                   {catError && <p className="text-[11px] text-red-500 mt-1">{catError}</p>}
-                </div>
-
-                {/* Unit */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Measurement Unit</label>
-                  <select
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
-                  >
-                    {COMMON_UNITS.map((u) => (
-                      <option key={u} value={u}>
-                        {u}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
             </div>
@@ -506,7 +537,7 @@ export const ProductsPage: React.FC = () => {
                         setIsCustomSize(!isCustomSize);
                         if (!isCustomSize) setFormData((prev) => ({ ...prev, size: '' }));
                       }}
-                      className="text-2xs text-purple-600 font-semibold hover:underline"
+                      className="text-2xs text-red-600 font-semibold hover:underline"
                     >
                       {isCustomSize ? 'Presets' : '+ Custom'}
                     </button>
@@ -517,7 +548,7 @@ export const ProductsPage: React.FC = () => {
                       placeholder="e.g. 38, 40, XL, Free Size"
                       value={formData.size || ''}
                       onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     />
                   ) : (
                     <select
@@ -530,7 +561,7 @@ export const ProductsPage: React.FC = () => {
                           setFormData({ ...formData, size: e.target.value });
                         }
                       }}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     >
                       <option value="">-- Select Size --</option>
                       {TEXTILE_SIZES.map((sz) => (
@@ -553,7 +584,7 @@ export const ProductsPage: React.FC = () => {
                         setIsCustomColor(!isCustomColor);
                         if (!isCustomColor) setFormData((prev) => ({ ...prev, color: '' }));
                       }}
-                      className="text-2xs text-purple-600 font-semibold hover:underline"
+                      className="text-2xs text-red-600 font-semibold hover:underline"
                     >
                       {isCustomColor ? 'Presets' : '+ Custom'}
                     </button>
@@ -564,7 +595,7 @@ export const ProductsPage: React.FC = () => {
                       placeholder="e.g. Navy Blue, White, Maroon"
                       value={formData.color || ''}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     />
                   ) : (
                     <select
@@ -577,7 +608,7 @@ export const ProductsPage: React.FC = () => {
                           setFormData({ ...formData, color: e.target.value });
                         }
                       }}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     >
                       <option value="">-- Select Color --</option>
                       {TEXTILE_COLORS.map((col) => (
@@ -600,7 +631,7 @@ export const ProductsPage: React.FC = () => {
                         setIsCustomFabric(!isCustomFabric);
                         if (!isCustomFabric) setFormData((prev) => ({ ...prev, fabric: '' }));
                       }}
-                      className="text-2xs text-purple-600 font-semibold hover:underline"
+                      className="text-2xs text-red-600 font-semibold hover:underline"
                     >
                       {isCustomFabric ? 'Presets' : '+ Custom'}
                     </button>
@@ -611,7 +642,7 @@ export const ProductsPage: React.FC = () => {
                       placeholder="e.g. Cotton, Pure Silk"
                       value={formData.fabric || ''}
                       onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     />
                   ) : (
                     <select
@@ -624,7 +655,7 @@ export const ProductsPage: React.FC = () => {
                           setFormData({ ...formData, fabric: e.target.value });
                         }
                       }}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     >
                       <option value="">-- Select Fabric --</option>
                       {TEXTILE_FABRICS.map((f) => (
@@ -645,7 +676,7 @@ export const ProductsPage: React.FC = () => {
                   <select
                     value={formData.gender || ''}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   >
                     <option value="">-- Select Section --</option>
                     {TEXTILE_GENDERS.map((g) => (
@@ -666,7 +697,7 @@ export const ProductsPage: React.FC = () => {
                     placeholder="e.g. Ramraj, Otto"
                     value={formData.brand || ''}
                     onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                 </div>
 
@@ -680,7 +711,7 @@ export const ProductsPage: React.FC = () => {
                     placeholder="e.g. Rack A-1"
                     value={formData.rack_location || ''}
                     onChange={(e) => setFormData({ ...formData, rack_location: e.target.value })}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 font-mono"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-mono"
                   />
                 </div>
               </div>
@@ -698,7 +729,7 @@ export const ProductsPage: React.FC = () => {
                     step="0.01"
                     value={formData.purchase_price}
                     onChange={(e) => setFormData({ ...formData, purchase_price: parseFloat(e.target.value) || 0 })}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                 </div>
 
@@ -713,7 +744,7 @@ export const ProductsPage: React.FC = () => {
                     required
                     value={formData.selling_price}
                     onChange={(e) => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono font-bold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono font-bold text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                 </div>
 
@@ -724,7 +755,7 @@ export const ProductsPage: React.FC = () => {
                     value={formData.hsn_code || ''}
                     onChange={(e) => setFormData({ ...formData, hsn_code: e.target.value })}
                     placeholder="e.g. 8471"
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                 </div>
 
@@ -742,7 +773,7 @@ export const ProductsPage: React.FC = () => {
                         }}
                         className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
                           !isCustomGst && formData.gst_rate === rate
-                            ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-600 shadow-sm'
                             : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                         }`}
                       >
@@ -767,7 +798,7 @@ export const ProductsPage: React.FC = () => {
                       step="1"
                       value={formData.opening_stock || 0}
                       onChange={(e) => setFormData({ ...formData, opening_stock: parseFloat(e.target.value) || 0 })}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                     />
                   </div>
                 )}
@@ -780,7 +811,7 @@ export const ProductsPage: React.FC = () => {
                     step="1"
                     value={formData.minimum_stock}
                     onChange={(e) => setFormData({ ...formData, minimum_stock: parseFloat(e.target.value) || 0 })}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                   />
                   <span className="text-[11px] text-slate-400 mt-1 block">Trigger low stock warning badge when stock drops below this number</span>
                 </div>
@@ -799,7 +830,7 @@ export const ProductsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg shadow-sm shadow-red-600/30 transition-all"
               >
                 <Save className="w-4 h-4" />
                 {isSubmitting ? 'Saving...' : productToEdit ? 'Update Product' : 'Save Product'}
@@ -833,13 +864,13 @@ export const ProductsPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs">
             <button
               onClick={() => setView('LIST')}
-              className="text-slate-500 hover:text-purple-600 font-medium flex items-center gap-1 transition-colors"
+              className="text-slate-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
             >
               <Package className="w-4 h-4 text-slate-400" />
               <span>Products</span>
             </button>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            <span className="text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
               Adjust Stock: {productToAdjust.name}
             </span>
           </div>
@@ -856,7 +887,7 @@ export const ProductsPage: React.FC = () => {
         {/* Form Card */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center">
               <Boxes className="w-5 h-5" />
             </div>
             <div>
@@ -881,7 +912,7 @@ export const ProductsPage: React.FC = () => {
                 <span className="text-2xs font-bold uppercase text-slate-400">Current Stock</span>
                 <div className="text-2xl font-bold text-slate-700 font-mono">{curStock} {productToAdjust.unit}</div>
               </div>
-              <ArrowRight className="w-5 h-5 text-purple-400" />
+              <ArrowRight className="w-5 h-5 text-rose-400" />
               <div className="text-center">
                 <span className="text-2xs font-bold uppercase text-slate-400">Resulting Stock</span>
                 <div className={`text-2xl font-bold font-mono ${resultingStock < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
@@ -897,8 +928,8 @@ export const ProductsPage: React.FC = () => {
                 {[
                   { id: 'RESTOCK', label: 'Restock / Inflow', color: 'text-emerald-700 border-emerald-300 bg-emerald-50' },
                   { id: 'DAMAGE', label: 'Damage / Loss', color: 'text-red-700 border-red-300 bg-red-50' },
-                  { id: 'RETURN', label: 'Customer Return', color: 'text-blue-700 border-blue-300 bg-blue-50' },
-                  { id: 'CORRECTION', label: 'Audit Count', color: 'text-purple-700 border-purple-300 bg-purple-50' },
+                  { id: 'RETURN', label: 'Customer Return', color: 'text-rose-700 border-rose-300 bg-rose-50' },
+                  { id: 'CORRECTION', label: 'Audit Count', color: 'text-red-700 border-red-300 bg-red-50' },
                 ].map((type) => (
                   <button
                     key={type.id}
@@ -906,7 +937,7 @@ export const ProductsPage: React.FC = () => {
                     onClick={() => setAdjustmentType(type.id as any)}
                     className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${
                       adjustmentType === type.id
-                        ? `${type.color} ring-2 ring-purple-500/20`
+                        ? `${type.color} ring-2 ring-red-500/20`
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
@@ -927,7 +958,7 @@ export const ProductsPage: React.FC = () => {
                 required
                 value={adjustmentQty}
                 onChange={(e) => setAdjustmentQty(parseFloat(e.target.value) || 0)}
-                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
             </div>
 
@@ -939,7 +970,7 @@ export const ProductsPage: React.FC = () => {
                 value={adjustmentNotes}
                 onChange={(e) => setAdjustmentNotes(e.target.value)}
                 placeholder="e.g. Received shipment from distributor invoice #904"
-                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
             </div>
 
@@ -955,7 +986,7 @@ export const ProductsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg shadow-sm shadow-red-600/30 transition-all"
               >
                 <Save className="w-4 h-4" />
                 {isSubmitting ? 'Updating...' : 'Commit Stock Adjustment'}
@@ -976,7 +1007,7 @@ export const ProductsPage: React.FC = () => {
       {feedbackMessage && (
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{feedbackMessage}</span>
           </div>
           <button onClick={() => setFeedbackMessage(null)} className="text-slate-400 hover:text-slate-600">✕</button>
@@ -993,7 +1024,7 @@ export const ProductsPage: React.FC = () => {
             placeholder="Search by name, size, color, brand, barcode..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-800"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-800"
           />
         </div>
 
@@ -1003,7 +1034,7 @@ export const ProductsPage: React.FC = () => {
           <select
             value={selectedGender}
             onChange={(e) => setSelectedGender(e.target.value)}
-            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-700 font-medium"
           >
             <option value="">All Sections</option>
             {TEXTILE_GENDERS.map((g) => (
@@ -1017,7 +1048,7 @@ export const ProductsPage: React.FC = () => {
           <select
             value={selectedSize}
             onChange={(e) => setSelectedSize(e.target.value)}
-            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-700 font-medium"
           >
             <option value="">All Sizes</option>
             {TEXTILE_SIZES.map((sz) => (
@@ -1031,7 +1062,7 @@ export const ProductsPage: React.FC = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-700 font-medium"
           >
             <option value="">All Categories ({categories.length})</option>
             {categories.map((c) => (
@@ -1045,7 +1076,7 @@ export const ProductsPage: React.FC = () => {
           <select
             value={stockFilter}
             onChange={(e) => setStockFilter(e.target.value as any)}
-            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 text-slate-700 font-medium"
+            className="px-2.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-700 font-medium"
           >
             <option value="ALL">All Stock</option>
             <option value="HEALTHY">In Stock</option>
@@ -1053,9 +1084,17 @@ export const ProductsPage: React.FC = () => {
             <option value="OUT">Out of Stock</option>
           </select>
 
+          {/* Date Range Filter */}
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onChange={setDateRange}
+            onClear={clearDateFilter}
+          />
+
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-xs transition-all ml-auto md:ml-0"
+            className="flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:from-red-800 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm shadow-red-600/30 transition-all ml-auto md:ml-0"
           >
             <Plus className="w-4 h-4" />
             <span>Add Garment</span>
@@ -1069,6 +1108,7 @@ export const ProductsPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
               <tr>
+                <th className="py-3 px-3 font-semibold text-center w-12">S.No</th>
                 <th className="py-3 px-4 font-semibold">Product Name</th>
                 <th className="py-3 px-3 font-semibold">Code / Barcode</th>
                 <th className="py-3 px-3 font-semibold">Category</th>
@@ -1080,38 +1120,41 @@ export const ProductsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {products.length === 0 ? (
+              {paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm font-semibold text-slate-700">No Products Found</p>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      {search ? 'Try clearing your search filter.' : 'Click "Add Product" to create your first item.'}
+                      {search || startDate || endDate ? 'Try clearing your search or date filter.' : 'Click "Add Garment" to create your first item.'}
                     </p>
                   </td>
                 </tr>
               ) : (
-                products.map((item) => {
+                paginatedProducts.map((item, index) => {
                   const isOutOfStock = item.current_stock <= 0;
                   const isLowStock = item.current_stock <= item.minimum_stock && !isOutOfStock;
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-3 text-center font-mono font-bold text-slate-500">
+                        {getSerialNumber(index)}
+                      </td>
                       <td className="py-3 px-4">
                         <div className="font-semibold text-slate-800">{item.name}</div>
                         <div className="flex flex-wrap items-center gap-1.5 mt-1">
                           {item.size && (
-                            <span className="text-[10px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">
+                            <span className="text-[10px] font-bold bg-red-50 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
                               Size: {item.size}
                             </span>
                           )}
                           {item.color && (
-                            <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
+                            <span className="text-[10px] font-medium bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
                               {item.color}
                             </span>
                           )}
                           {item.fabric && (
-                            <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">
+                            <span className="text-[10px] font-medium bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
                               {item.fabric}
                             </span>
                           )}
@@ -1126,22 +1169,24 @@ export const ProductsPage: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-1">
-                          Unit: <strong className="text-slate-600">{item.unit}</strong>{' '}
-                          {item.brand ? `| Brand: ${item.brand} ` : ''}
-                          {item.hsn_code ? `| HSN: ${item.hsn_code}` : ''}
-                        </div>
+                        {(item.brand || item.hsn_code) && (
+                          <div className="text-[10px] text-slate-400 mt-1">
+                            {item.brand ? `Brand: ${item.brand}` : ''}
+                            {item.brand && item.hsn_code ? ' | ' : ''}
+                            {item.hsn_code ? `HSN: ${item.hsn_code}` : ''}
+                          </div>
+                        )}
                       </td>
 
                       <td className="py-3 px-3 font-mono">
-                        <div className="font-semibold text-purple-700">{item.code}</div>
+                        <div className="font-semibold text-red-700">{item.code}</div>
                         {item.barcode && <div className="text-[10px] text-slate-400">{item.barcode}</div>}
                       </td>
 
                       <td className="py-3 px-3">
                         <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
                           <Tag className="w-3 h-3 text-slate-400" />
-                          {item.category_name || 'Uncategorized'}
+                          {item.category_name || categories.find((c) => c.id === item.category_id)?.name || 'Uncategorized'}
                         </span>
                       </td>
 
@@ -1154,7 +1199,7 @@ export const ProductsPage: React.FC = () => {
                       </td>
 
                       <td className="py-3 px-3 text-center">
-                        <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                        <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                           {item.gst_rate}%
                         </span>
                       </td>
@@ -1185,7 +1230,7 @@ export const ProductsPage: React.FC = () => {
                           <button
                             onClick={() => handleOpenEdit(item)}
                             title="Edit Product"
-                            className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -1205,6 +1250,18 @@ export const ProductsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={[10, 25, 50, 100]}
+          itemName="garments"
+        />
       </div>
 
       {/* Delete Confirmation Box */}

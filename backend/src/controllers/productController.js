@@ -138,7 +138,33 @@ export async function listProducts(req, res, next) {
     }
 
     const products = await Product.find(query).sort({ updatedAt: -1 });
-    const formatted = products.map(formatProduct);
+
+    // Ensure category names are populated if missing
+    const categoryIds = [...new Set(products.map((p) => p.categoryId).filter(Boolean))];
+    let catMap = {};
+    if (categoryIds.length > 0) {
+      const cats = await Category.find({
+        businessId,
+        $or: [
+          { categoryId: { $in: categoryIds } },
+          { _id: { $in: categoryIds.filter((id) => id && id.match(/^[0-9a-fA-F]{24}$/)) } },
+        ],
+      });
+      for (const c of cats) {
+        if (c.categoryId) catMap[c.categoryId] = c.name;
+        catMap[c._id.toString()] = c.name;
+      }
+    }
+
+    const formatted = products.map((p) => {
+      const formattedProd = formatProduct(p);
+      if (!formattedProd.category_name && formattedProd.category_id && catMap[formattedProd.category_id]) {
+        formattedProd.category_name = catMap[formattedProd.category_id];
+        formattedProd.categoryName = catMap[formattedProd.category_id];
+      }
+      return formattedProd;
+    });
+
     res.json({ success: true, count: formatted.length, data: formatted });
   } catch (err) {
     next(err);
@@ -169,6 +195,18 @@ export async function createProduct(req, res, next) {
     const businessId = req.businessId || 'default';
     const payload = normalizeProductInput(req.body, businessId);
 
+    // If category name not provided, resolve it from Category collection
+    if (payload.categoryId && !payload.categoryName) {
+      const cat = await Category.findOne({
+        businessId,
+        $or: [
+          { categoryId: payload.categoryId },
+          { _id: payload.categoryId.match(/^[0-9a-fA-F]{24}$/) ? payload.categoryId : null },
+        ],
+      });
+      if (cat) payload.categoryName = cat.name;
+    }
+
     // Check code uniqueness
     const existing = await Product.findOne({ businessId, code: payload.code });
     if (existing) {
@@ -192,6 +230,18 @@ export async function updateProduct(req, res, next) {
     const { id } = req.params;
     const businessId = req.businessId || 'default';
     const payload = normalizeProductInput(req.body, businessId, id);
+
+    // If category name not provided, resolve it from Category collection
+    if (payload.categoryId && !payload.categoryName) {
+      const cat = await Category.findOne({
+        businessId,
+        $or: [
+          { categoryId: payload.categoryId },
+          { _id: payload.categoryId.match(/^[0-9a-fA-F]{24}$/) ? payload.categoryId : null },
+        ],
+      });
+      if (cat) payload.categoryName = cat.name;
+    }
 
     const updated = await Product.findOneAndUpdate(
       { $or: [{ productId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }], businessId },
@@ -251,11 +301,25 @@ export async function createCategory(req, res, next) {
       return res.status(400).json({ success: false, error: 'Category name is required.' });
     }
 
+    const trimmedName = name.trim();
+    // Check if category with same name already exists
+    const existing = await Category.findOne({
+      businessId,
+      name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        error: `Category "${trimmedName}" already exists. Please choose a different name.`,
+      });
+    }
+
     const categoryId = `cat_${Date.now()}`;
     const category = new Category({
       categoryId,
       businessId,
-      name: name.trim(),
+      name: trimmedName,
       description: (description || '').trim(),
     });
 
@@ -268,6 +332,12 @@ export async function createCategory(req, res, next) {
       },
     });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        error: `Category "${(req.body.name || '').trim()}" already exists. Please choose a different name.`,
+      });
+    }
     next(err);
   }
 }

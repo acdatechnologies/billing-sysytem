@@ -45,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Brand Header */}
       <div>
         <div className="p-5 border-b border-slate-800/80 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-rose-600 to-red-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-red-600/30">
             V
           </div>
           <div>
@@ -69,14 +69,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onTabChange(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-600/30'
                     : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon
                     className={`w-4 h-4 transition-transform group-hover:scale-110 ${
-                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-400'
+                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-rose-400'
                     }`}
                   />
                   <span>{item.label}</span>
@@ -118,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-700/50">
             <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-blue-400" /> Local SQLite
+              <ShieldCheck className="w-3 h-3 text-rose-400" /> Local SQLite
             </span>
             <span className="text-emerald-400 font-medium">Active</span>
           </div>

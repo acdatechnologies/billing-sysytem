@@ -70,7 +70,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Today's Bills
             </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
               <Receipt className="w-4 h-4" />
             </div>
           </div>
@@ -90,7 +90,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Total Products
             </span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+            <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center border border-red-100">
               <Package className="w-4 h-4" />
             </div>
           </div>
@@ -100,7 +100,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             </h3>
             <button
               onClick={() => onNavigate('products')}
-              className="text-[11px] text-blue-600 hover:text-blue-800 font-medium mt-1 flex items-center gap-0.5"
+              className="text-[11px] text-red-600 hover:text-red-800 font-medium mt-1 flex items-center gap-0.5"
             >
               View catalog <ArrowRight className="w-2.5 h-2.5" />
             </button>
@@ -172,7 +172,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-blue-600" />
+                <TrendingUp className="w-4 h-4 text-red-600" />
                 Monthly Sales Overview
               </h3>
               <p className="text-xs text-slate-500">
@@ -181,7 +181,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             </div>
             <button
               onClick={() => onNavigate('reports')}
-              className="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1"
+              className="text-xs text-red-600 font-semibold hover:text-red-800 flex items-center gap-1"
             >
               Full Reports <ArrowRight className="w-3 h-3" />
             </button>
@@ -212,7 +212,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
                     </div>
                     <div
                       style={{ height: `${heightPercent}%` }}
-                      className="w-full max-w-[48px] bg-gradient-to-t from-blue-600 to-indigo-500 rounded-t-md group-hover:from-blue-500 group-hover:to-indigo-400 transition-all duration-200 relative shadow-xs"
+                      className="w-full max-w-[48px] bg-gradient-to-t from-red-600 via-rose-500 to-orange-400 rounded-t-md group-hover:from-red-500 group-hover:to-rose-400 transition-all duration-200 relative shadow-xs"
                     ></div>
                     <span className="text-[11px] font-medium text-slate-600 mt-2 truncate max-w-full">
                       {item.month}
@@ -240,15 +240,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             <div className="space-y-2.5">
               <button
                 onClick={() => onNavigate('billing')}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-blue-200 bg-blue-50/50 hover:bg-blue-100/60 text-blue-900 transition-colors text-left"
+                className="w-full flex items-center justify-between p-3 rounded-lg border border-red-200 bg-red-50/60 hover:bg-red-100/70 text-red-950 transition-colors text-left"
               >
                 <div>
                   <h4 className="text-xs font-bold">Create New GST Invoice</h4>
-                  <p className="text-[11px] text-blue-700/80">
+                  <p className="text-[11px] text-red-700/90">
                     Fast product search, barcode & tax
                   </p>
                 </div>
-                <Receipt className="w-4 h-4 text-blue-600" />
+                <Receipt className="w-4 h-4 text-red-600" />
               </button>
 
               <button
@@ -299,7 +299,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
             </div>
             <button
               onClick={() => onNavigate('inventory')}
-              className="text-xs text-blue-600 font-semibold hover:text-blue-800"
+              className="text-xs text-red-600 font-semibold hover:text-red-800"
             >
               Manage Inventory
             </button>
@@ -359,14 +359,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-blue-600" />
+              <Receipt className="w-4 h-4 text-red-600" />
               <h3 className="font-bold text-sm text-slate-800">
                 Recent Invoices
               </h3>
             </div>
             <button
               onClick={() => onNavigate('history')}
-              className="text-xs text-blue-600 font-semibold hover:text-blue-800"
+              className="text-xs text-red-600 font-semibold hover:text-red-800"
             >
               View All History
             </button>
@@ -397,7 +397,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ metrics, onNavigate }) => 
                 <tbody className="divide-y divide-slate-100">
                   {recentTransactionsList.map((tx: any) => (
                     <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2.5 px-4 font-mono font-bold text-blue-600">
+                      <td className="py-2.5 px-4 font-mono font-bold text-red-600">
                         {tx.invoice_number}
                       </td>
                       <td className="py-2.5 px-3 font-medium text-slate-800">

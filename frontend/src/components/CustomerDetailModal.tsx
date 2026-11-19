@@ -47,7 +47,7 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-base">
+            <div className="w-10 h-10 rounded-full bg-red-100 text-red-700 font-bold flex items-center justify-center text-base">
               {customer.name.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -139,7 +139,7 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
           {/* Past Invoices History Table */}
           <div>
             <h4 className="font-bold text-sm text-slate-800 mb-2 flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-blue-600" />
+              <Receipt className="w-4 h-4 text-red-600" />
               Invoice Purchase History ({customer.invoices?.length || 0})
             </h4>
 
@@ -164,7 +164,7 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                   ) : (
                     customer.invoices.map((inv) => (
                       <tr key={inv.id} className="hover:bg-slate-50/70">
-                        <td className="py-2 px-3 font-mono font-bold text-blue-600">
+                        <td className="py-2 px-3 font-mono font-bold text-red-600">
                           {inv.invoice_number}
                         </td>
                         <td className="py-2 px-3 text-slate-600">
@@ -184,7 +184,7 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                               onClose();
                               onViewInvoice(inv.id);
                             }}
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
                             title="View Invoice"
                           >
                             <Eye className="w-3.5 h-3.5" />

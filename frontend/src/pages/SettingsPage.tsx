@@ -189,7 +189,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Settings className="w-5 h-5 text-blue-600" />
+            <Settings className="w-5 h-5 text-red-600" />
             System & Store Settings
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -219,7 +219,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Cloud className="w-4 h-4 text-blue-600" />
+            <Cloud className="w-4 h-4 text-red-600" />
             <h3 className="font-bold text-sm text-slate-800">
               Cloud Synchronization & MongoDB Atlas
             </h3>
@@ -277,7 +277,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
             {!syncStatus.isConnected ? (
               <button
                 onClick={() => setShowLoginModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs shadow-blue-600/30 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-lg shadow-sm shadow-red-600/30 transition-all cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
                 <span>Connect Cloud Account</span>
@@ -287,7 +287,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                 <button
                   onClick={handleTriggerSync}
                   disabled={isSyncing}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs shadow-blue-600/30 transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-lg shadow-sm shadow-red-600/30 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   <span>{isSyncing ? 'Syncing...' : 'Sync with Cloud Now'}</span>
@@ -298,7 +298,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                   disabled={isBackingUp}
                   className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  <UploadCloud className="w-4 h-4 text-blue-600" />
+                  <UploadCloud className="w-4 h-4 text-red-600" />
                   <span>{isBackingUp ? 'Creating Backup...' : 'Generate Cloud Backup'}</span>
                 </button>
               </div>
@@ -319,10 +319,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
           <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Building className="w-4 h-4 text-blue-600" />
+                <Building className="w-4 h-4 text-red-600" />
                 <h3 className="font-bold text-sm text-slate-800">Business Profile</h3>
               </div>
-              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 uppercase tracking-wide">
+              <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 uppercase tracking-wide">
                 Verified Business
               </span>
             </div>
@@ -378,7 +378,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
           {/* Invoice Branding & Legal Footer */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
-              <Settings className="w-4 h-4 text-blue-600" />
+              <Settings className="w-4 h-4 text-red-600" />
               <h3 className="font-bold text-sm text-slate-800">Invoice Branding & Terms</h3>
             </div>
             <div className="p-5 space-y-4 text-xs">
@@ -411,7 +411,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
           <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Printer className="w-4 h-4 text-blue-600" />
+                <Printer className="w-4 h-4 text-red-600" />
                 <h3 className="font-bold text-sm text-slate-800">
                   Printer & Hardware Configuration
                 </h3>
@@ -430,7 +430,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                   <select
                     value={selectedPrinter}
                     onChange={(e) => setSelectedPrinter(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   >
                     <option value="">Default System Printer</option>
                     {printers.map((p) => (
@@ -448,7 +448,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                   <select
                     value={paperSize}
                     onChange={(e) => setPaperSize(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   >
                     <option value="58mm">58mm Thermal Receipt (2-inch POS)</option>
                     <option value="80mm">80mm Thermal Receipt (3-inch POS)</option>
@@ -464,14 +464,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                   disabled={isTesting}
                   className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  <PlayCircle className="w-4 h-4 text-blue-600" />
+                  <PlayCircle className="w-4 h-4 text-red-600" />
                   <span>{isTesting ? 'Sending...' : 'Run Test Print'}</span>
                 </button>
 
                 <button
                   onClick={handleSavePrinterSettings}
                   disabled={isSaving}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs shadow-blue-600/30 transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-lg shadow-sm shadow-red-600/30 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>{isSaving ? 'Saving...' : 'Save Printer Settings'}</span>
@@ -530,7 +530,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
                   <Cloud className="w-4 h-4" />
                 </div>
                 <h3 className="font-bold text-sm text-slate-800">Connect Cloud Account</h3>
@@ -596,7 +596,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ businessInfo, onRefr
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs"
+                  className="px-4 py-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-lg shadow-sm shadow-red-600/30"
                 >
                   Sign In & Link
                 </button>

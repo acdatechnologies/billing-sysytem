@@ -146,11 +146,11 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
                 onClick={() => setMovementType('RESTOCK')}
                 className={`p-2.5 rounded-lg border text-left flex items-start gap-2 transition-all ${
                   movementType === 'RESTOCK'
-                    ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-1 ring-blue-600'
+                    ? 'border-red-600 bg-red-50/70 text-red-900 ring-1 ring-red-600'
                     : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                 }`}
               >
-                <PlusCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <PlusCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-xs">Restock Intake</div>
                   <div className="text-[10px] text-slate-500">Purchase / new shipment</div>
@@ -178,11 +178,11 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
                 onClick={() => setMovementType('CORRECTION')}
                 className={`p-2.5 rounded-lg border text-left flex items-start gap-2 transition-all ${
                   movementType === 'CORRECTION'
-                    ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-1 ring-indigo-600'
+                    ? 'border-rose-600 bg-rose-50/70 text-rose-900 ring-1 ring-rose-600'
                     : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                 }`}
               >
-                <Boxes className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+                <Boxes className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-xs">Count Correction</div>
                   <div className="text-[10px] text-slate-500">Set exact verified count</div>
@@ -221,7 +221,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
               required
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
             />
           </div>
 
@@ -255,7 +255,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
               placeholder="e.g. Supplier PO-492, shelf count discrepancy, customer return..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
             />
           </div>
 
@@ -272,7 +272,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-700 active:bg-cyan-800 text-white px-5 py-2 rounded-lg font-semibold shadow-xs shadow-cyan-600/30 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:from-red-800 text-white px-5 py-2 rounded-lg font-semibold shadow-xs shadow-red-600/30 transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{isSubmitting ? 'Updating...' : 'Save Stock Adjustment'}</span>

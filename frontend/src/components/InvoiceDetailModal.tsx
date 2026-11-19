@@ -89,7 +89,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleOpenPrint}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white text-xs font-semibold shadow-xs transition-colors"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print Invoice</span>
@@ -179,7 +179,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
               </div>
 
               <div className="text-right">
-                <div className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded inline-block">
+                <div className="text-xs font-bold uppercase tracking-wider text-red-600 bg-red-50 px-2.5 py-1 rounded inline-block">
                   Tax Invoice
                 </div>
                 <h3 className="text-lg font-mono font-bold text-slate-900 mt-2">
@@ -350,7 +350,7 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
 
                 <div className="flex justify-between text-sm font-bold text-slate-900 border-t-2 border-slate-300 pt-2">
                   <span>Grand Total</span>
-                  <span className="font-mono text-base text-blue-600">{formatCurrency(invoice.grand_total)}</span>
+                  <span className="font-mono text-base text-red-600">{formatCurrency(invoice.grand_total)}</span>
                 </div>
               </div>
             </div>

@@ -7,7 +7,7 @@ import {
   History,
   ShieldCheck,
   CheckCircle2,
-  Sparkles,
+  Tag,
   ExternalLink,
   RefreshCw,
   Search,
@@ -168,7 +168,7 @@ export const WhatsAppDataPage: React.FC = () => {
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <Tag className="w-3.5 h-3.5 text-amber-500" />
             <span>Offers & Broadcasts</span>
           </button>
 
@@ -192,7 +192,7 @@ export const WhatsAppDataPage: React.FC = () => {
           {/* Left: Invoice Selection & Target Mobile */}
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4 text-xs">
             <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-blue-600" />
+              <Receipt className="w-4 h-4 text-red-600" />
               1. Select Invoice to Share
             </h3>
 
@@ -274,7 +274,7 @@ export const WhatsAppDataPage: React.FC = () => {
             {/* Filter Audience */}
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4 text-xs">
               <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-600" />
+                <Users className="w-4 h-4 text-red-600" />
                 Select Target Audience
               </h3>
 
@@ -300,7 +300,7 @@ export const WhatsAppDataPage: React.FC = () => {
                   onClick={() => setPromoAudience('REPEAT')}
                   className={`w-full p-3 rounded-lg border text-left flex items-start justify-between transition-all ${
                     promoAudience === 'REPEAT'
-                      ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-1 ring-indigo-600'
+                      ? 'border-rose-600 bg-rose-50/70 text-rose-900 ring-1 ring-rose-600'
                       : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                   }`}
                 >
@@ -308,7 +308,7 @@ export const WhatsAppDataPage: React.FC = () => {
                     <div className="font-bold">Repeat Customers</div>
                     <div className="text-[10px] text-slate-500">2 or more previous bills</div>
                   </div>
-                  <Receipt className="w-4 h-4 text-indigo-600" />
+                  <Receipt className="w-4 h-4 text-rose-600" />
                 </button>
 
                 <button
@@ -316,7 +316,7 @@ export const WhatsAppDataPage: React.FC = () => {
                   onClick={() => setPromoAudience('RECENT_30')}
                   className={`w-full p-3 rounded-lg border text-left flex items-start justify-between transition-all ${
                     promoAudience === 'RECENT_30'
-                      ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-1 ring-blue-600'
+                      ? 'border-red-600 bg-red-50/70 text-red-900 ring-1 ring-red-600'
                       : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                   }`}
                 >
@@ -324,7 +324,7 @@ export const WhatsAppDataPage: React.FC = () => {
                     <div className="font-bold">Recent Customers</div>
                     <div className="text-[10px] text-slate-500">Shopped with purchase records</div>
                   </div>
-                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <Users className="w-4 h-4 text-red-600" />
                 </button>
               </div>
 
@@ -337,7 +337,7 @@ export const WhatsAppDataPage: React.FC = () => {
             <div className="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4 text-xs">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Tag className="w-4 h-4 text-amber-500" />
                   Promotional Offer Template
                 </h3>
                 <span className="text-[10px] text-slate-400">Placeholders: [Customer Name], [Business Name]</span>
@@ -347,7 +347,7 @@ export const WhatsAppDataPage: React.FC = () => {
                 rows={6}
                 value={promoMessageTemplate}
                 onChange={(e) => setPromoMessageTemplate(e.target.value)}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-sans text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-sans text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
 
               <div className="text-[10px] text-slate-500">
@@ -484,7 +484,7 @@ export const WhatsAppDataPage: React.FC = () => {
                       <td className="py-2.5 px-3 font-mono text-slate-600">
                         {l.mobile}
                       </td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-blue-600">
+                      <td className="py-2.5 px-3 font-mono font-bold text-red-600">
                         {l.invoice_number || '—'}
                       </td>
                       <td className="py-2.5 px-4 text-slate-600 truncate max-w-xs">

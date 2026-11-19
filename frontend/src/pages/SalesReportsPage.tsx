@@ -133,7 +133,7 @@ export const SalesReportsPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Sales & Tax Reports</h1>
-            <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-purple-200">
+            <span className="bg-red-50 text-red-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-red-200">
               GSTR-1 Ready
             </span>
           </div>
@@ -158,9 +158,9 @@ export const SalesReportsPage: React.FC = () => {
               <button
                 onClick={() => handleExportCSV('GSTR1')}
                 disabled={exporting || loading}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 shadow-xs transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg shadow-sm shadow-red-600/30 transition-all"
               >
-                <Download className="w-4 h-4 text-purple-100" />
+                <Download className="w-4 h-4 text-white" />
                 Export GSTR-1 Tax (CSV)
               </button>
             </div>
@@ -207,7 +207,7 @@ export const SalesReportsPage: React.FC = () => {
               onClick={() => setSelectedPeriod(p.value)}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                 selectedPeriod === p.value
-                  ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm shadow-red-600/30 font-semibold'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
@@ -247,7 +247,7 @@ export const SalesReportsPage: React.FC = () => {
         {/* Active Range Display */}
         {report && (
           <div className="text-xs text-slate-500 flex items-center gap-1.5 shrink-0">
-            <Clock className="w-3.5 h-3.5 text-purple-500" />
+            <Clock className="w-3.5 h-3.5 text-red-500" />
             <span>
               Showing: <strong className="text-slate-800">{report.periodLabel}</strong> ({report.startDate} to {report.endDate})
             </span>
@@ -280,15 +280,15 @@ export const SalesReportsPage: React.FC = () => {
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Collected Amount</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
               <CreditCard className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-blue-700 tracking-tight">
+          <div className="text-2xl font-bold text-rose-700 tracking-tight">
             {report ? formatCurrency(report.totalCollected) : '₹0.00'}
           </div>
           <div className="mt-2.5 flex items-center gap-2 text-xs text-slate-500">
-            <span className="bg-blue-100 text-blue-800 font-medium px-2 py-0.5 rounded">
+            <span className="bg-rose-100 text-rose-800 font-medium px-2 py-0.5 rounded">
               {report && report.totalInvoicedSales > 0
                 ? Math.round((report.totalCollected / report.totalInvoicedSales) * 100)
                 : 100}
@@ -321,11 +321,11 @@ export const SalesReportsPage: React.FC = () => {
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total GST Collected</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
               <Percent className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-purple-700 tracking-tight">
+          <div className="text-2xl font-bold text-red-700 tracking-tight">
             {report ? formatCurrency(report.totalTax) : '₹0.00'}
           </div>
           <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500">
@@ -373,11 +373,11 @@ export const SalesReportsPage: React.FC = () => {
             onClick={() => setActiveTab('tax')}
             className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
               activeTab === 'tax'
-                ? 'border-purple-600 text-purple-700 bg-white'
+                ? 'border-red-600 text-red-700 bg-white'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Percent className="w-4 h-4 text-purple-600" />
+            <Percent className="w-4 h-4 text-red-600" />
             GSTR-1 Tax Summary ({report?.taxRateBreakdown.length || 0} Slabs)
           </button>
 
@@ -385,11 +385,11 @@ export const SalesReportsPage: React.FC = () => {
             onClick={() => setActiveTab('payments')}
             className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
               activeTab === 'payments'
-                ? 'border-purple-600 text-purple-700 bg-white'
+                ? 'border-red-600 text-red-700 bg-white'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <CreditCard className="w-4 h-4 text-blue-600" />
+            <CreditCard className="w-4 h-4 text-rose-600" />
             Payment Mode Summary ({report?.paymentBreakdown.length || 0})
           </button>
 
@@ -397,7 +397,7 @@ export const SalesReportsPage: React.FC = () => {
             onClick={() => setActiveTab('products')}
             className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
               activeTab === 'products'
-                ? 'border-purple-600 text-purple-700 bg-white'
+                ? 'border-red-600 text-red-700 bg-white'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -409,7 +409,7 @@ export const SalesReportsPage: React.FC = () => {
             onClick={() => setActiveTab('timeline')}
             className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
               activeTab === 'timeline'
-                ? 'border-purple-600 text-purple-700 bg-white'
+                ? 'border-red-600 text-red-700 bg-white'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -430,7 +430,7 @@ export const SalesReportsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => handleExportCSV('GSTR1')}
-                className="text-xs text-purple-700 hover:text-purple-800 font-semibold flex items-center gap-1 hover:underline"
+                className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 hover:underline"
               >
                 <Download className="w-3.5 h-3.5" /> Export this table as CSV
               </button>
@@ -454,7 +454,7 @@ export const SalesReportsPage: React.FC = () => {
                     {report.taxRateBreakdown.map((row, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-2.5 px-3 font-semibold text-slate-800">
-                          <span className="inline-block px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">
+                          <span className="inline-block px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-bold">
                             {row.gstRate}% GST
                           </span>
                         </td>
@@ -470,7 +470,7 @@ export const SalesReportsPage: React.FC = () => {
                         <td className="py-2.5 px-3 text-right text-slate-600">
                           {formatCurrency(row.igstAmount)}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-purple-700">
+                        <td className="py-2.5 px-3 text-right font-bold text-red-700">
                           {formatCurrency(row.totalTax)}
                         </td>
                         <td className="py-2.5 px-3 text-right font-bold text-slate-900">
@@ -486,7 +486,7 @@ export const SalesReportsPage: React.FC = () => {
                       <td className="py-2.5 px-3 text-right">{formatCurrency(report.totalCgst)}</td>
                       <td className="py-2.5 px-3 text-right">{formatCurrency(report.totalSgst)}</td>
                       <td className="py-2.5 px-3 text-right">{formatCurrency(report.totalIgst)}</td>
-                      <td className="py-2.5 px-3 text-right text-purple-800">{formatCurrency(report.totalTax)}</td>
+                      <td className="py-2.5 px-3 text-right text-red-700">{formatCurrency(report.totalTax)}</td>
                       <td className="py-2.5 px-3 text-right text-slate-900">{formatCurrency(report.totalInvoicedSales)}</td>
                     </tr>
                   </tfoot>
@@ -522,11 +522,11 @@ export const SalesReportsPage: React.FC = () => {
                       case 'CASH':
                         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
                       case 'UPI':
-                        return 'bg-blue-50 text-blue-700 border-blue-200';
+                        return 'bg-rose-50 text-rose-700 border-rose-200';
                       case 'CARD':
-                        return 'bg-purple-50 text-purple-700 border-purple-200';
+                        return 'bg-rose-50 text-rose-700 border-rose-200';
                       case 'BANK_TRANSFER':
-                        return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                        return 'bg-slate-50 text-slate-700 border-slate-200';
                       default:
                         return 'bg-slate-50 text-slate-700 border-slate-200';
                     }
@@ -552,7 +552,7 @@ export const SalesReportsPage: React.FC = () => {
                       {/* Visual progress bar */}
                       <div className="w-full bg-slate-100 rounded-full h-1.5 mt-3 overflow-hidden">
                         <div
-                          className="bg-purple-600 h-1.5 rounded-full"
+                          className="bg-gradient-to-r from-red-600 to-rose-600 h-1.5 rounded-full"
                           style={{ width: `${Math.min(100, pm.percentage)}%` }}
                         />
                       </div>

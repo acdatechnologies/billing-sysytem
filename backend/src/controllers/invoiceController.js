@@ -81,24 +81,22 @@ function formatInvoice(doc) {
 export async function getNextInvoiceNumber(req, res, next) {
   try {
     const businessId = req.businessId || 'default';
-    const now = new Date();
-    const prefix = `INV-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-`;
+    const invoices = await Invoice.find({ businessId }, { invoiceNumber: 1 });
 
-    const latestInvoice = await Invoice.findOne({
-      businessId,
-      invoiceNumber: { $regex: `^${prefix}` },
-    }).sort({ invoiceNumber: -1 });
-
-    let nextSeq = 1;
-    if (latestInvoice && latestInvoice.invoiceNumber) {
-      const parts = latestInvoice.invoiceNumber.split('-');
-      const lastSeq = parseInt(parts[parts.length - 1], 10);
-      if (!isNaN(lastSeq)) {
-        nextSeq = lastSeq + 1;
+    let maxSeq = 0;
+    for (const inv of invoices) {
+      if (!inv.invoiceNumber) continue;
+      const match = inv.invoiceNumber.trim().match(/INV-(?:.*-)?0*(\d+)$/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxSeq) {
+          maxSeq = num;
+        }
       }
     }
 
-    const nextNumber = `${prefix}${String(nextSeq).padStart(4, '0')}`;
+    const nextSeq = maxSeq + 1;
+    const nextNumber = `INV-${String(nextSeq).padStart(2, '0')}`;
     res.json({ success: true, nextNumber });
   } catch (err) {
     next(err);
@@ -163,10 +161,17 @@ export async function createInvoice(req, res, next) {
     // Auto-generate invoice number if missing
     let invoiceNumber = data.invoiceNumber || data.invoice_number;
     if (!invoiceNumber) {
-      const now = new Date();
-      const prefix = `INV-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-`;
-      const count = await Invoice.countDocuments({ businessId });
-      invoiceNumber = `${prefix}${String(count + 1).padStart(4, '0')}`;
+      const invoices = await Invoice.find({ businessId }, { invoiceNumber: 1 });
+      let maxSeq = 0;
+      for (const inv of invoices) {
+        if (!inv.invoiceNumber) continue;
+        const match = inv.invoiceNumber.trim().match(/INV-(?:.*-)?0*(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxSeq) maxSeq = num;
+        }
+      }
+      invoiceNumber = `INV-${String(maxSeq + 1).padStart(2, '0')}`;
     }
 
     const normalizedItems = Array.isArray(data.items) ? data.items.map(normalizeInvoiceItem) : [];
