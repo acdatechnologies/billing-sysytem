@@ -59,10 +59,45 @@ export const invoiceApi = {
   async getNextInvoiceNumber(): Promise<string> {
     const electron = getElectronAPI();
     if (electron) {
-      return await electron.getNextInvoiceNumber();
+      try {
+        const num = await electron.getNextInvoiceNumber();
+        if (num && typeof num === 'string' && num.trim() !== '' && num !== 'Loading...') {
+          localStorage.setItem('vnd_last_known_invoice_number', num.trim());
+          return num.trim();
+        }
+      } catch (err) {
+        console.error('[invoiceApi] Error fetching invoice number from electron:', err);
+      }
     }
-    const res = await restRequest<{ nextNumber: string }>('/invoices/next-number');
-    return res.nextNumber;
+
+    try {
+      const res = await restRequest<any>('/invoices/next-number');
+      const num = res?.nextNumber || res?.data?.nextNumber;
+      if (num && typeof num === 'string' && num.trim() !== '') {
+        localStorage.setItem('vnd_last_known_invoice_number', num.trim());
+        return num.trim();
+      }
+    } catch (err) {
+      console.warn('[invoiceApi] REST getNextInvoiceNumber unavailable, falling back:', err);
+    }
+
+    // Guaranteed local fallback
+    const cached = localStorage.getItem('vnd_last_known_invoice_number');
+    if (cached && cached.trim() !== '' && cached !== 'Loading...') {
+      const match = cached.match(/(\d+)$/);
+      if (match) {
+        const nextVal = parseInt(match[1], 10) + 1;
+        const prefix = cached.slice(0, match.index);
+        const nextStr = `${prefix}${nextVal}`;
+        localStorage.setItem('vnd_last_known_invoice_number', nextStr);
+        return nextStr;
+      }
+      return cached;
+    }
+
+    const fallback = 'VND-1004';
+    localStorage.setItem('vnd_last_known_invoice_number', fallback);
+    return fallback;
   },
 
   // List invoices with filters

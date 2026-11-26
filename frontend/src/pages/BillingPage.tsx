@@ -40,7 +40,9 @@ interface CartLineItem {
 
 export const BillingPage: React.FC = () => {
   // Invoice header
-  const [invoiceNumber, setInvoiceNumber] = useState('Loading...');
+  const [invoiceNumber, setInvoiceNumber] = useState<string>(() => {
+    return localStorage.getItem('vnd_last_known_invoice_number') || 'VND-1004';
+  });
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [isInterstate, setIsInterstate] = useState(false);
 
@@ -76,20 +78,31 @@ export const BillingPage: React.FC = () => {
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
-  // Fetch initial data: Next invoice number, products, customers
+  // Fetch initial data: Next invoice number, products, customers independently
   const fetchInitialData = useCallback(async () => {
-    try {
-      const [nextNum, prodList, custList] = await Promise.all([
-        invoiceApi.getNextInvoiceNumber(),
-        productApi.getProducts({ stockStatus: 'ALL' }),
-        customerApi.getCustomers(),
-      ]);
-      if (nextNum) setInvoiceNumber(nextNum);
-      if (prodList) setProducts(prodList);
-      if (custList) setCustomers(custList);
-    } catch (err) {
-      console.error('[BillingPage] Error fetching initial billing data:', err);
-    }
+    // 1. Next Invoice Number (never blocked by products/customers)
+    invoiceApi.getNextInvoiceNumber().then((nextNum) => {
+      if (nextNum && nextNum.trim() !== '' && nextNum !== 'Loading...') {
+        setInvoiceNumber(nextNum);
+        localStorage.setItem('vnd_last_known_invoice_number', nextNum);
+      }
+    }).catch((err) => {
+      console.warn('[BillingPage] Failed to fetch next invoice number:', err);
+    });
+
+    // 2. Products Catalog
+    productApi.getProducts({ stockStatus: 'ALL' }).then((prodList) => {
+      if (prodList && Array.isArray(prodList)) setProducts(prodList);
+    }).catch((err) => {
+      console.warn('[BillingPage] Failed to fetch products:', err);
+    });
+
+    // 3. Customer Directory
+    customerApi.getCustomers().then((custList) => {
+      if (custList && Array.isArray(custList)) setCustomers(custList);
+    }).catch((err) => {
+      console.warn('[BillingPage] Failed to fetch customers:', err);
+    });
   }, []);
 
   useEffect(() => {
@@ -456,7 +469,9 @@ export const BillingPage: React.FC = () => {
           </div>
           <div>
             <div className="text-[10px] text-slate-400 font-semibold uppercase">Invoice Number</div>
-            <div className="font-mono font-bold text-slate-800 text-sm">{invoiceNumber}</div>
+            <div className="font-mono font-bold text-slate-800 text-sm">
+              {!invoiceNumber || invoiceNumber === 'Loading...' ? (localStorage.getItem('vnd_last_known_invoice_number') || 'VND-1004') : invoiceNumber}
+            </div>
             <div className="text-[10px] text-slate-500">{invoiceDate}</div>
           </div>
         </div>

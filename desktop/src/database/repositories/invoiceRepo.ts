@@ -57,20 +57,42 @@ export interface InvoiceFilter {
 }
 
 export function getNextInvoiceNumber(db: Database.Database, businessId = 'biz_default_001'): string {
-  const invoices = db.prepare('SELECT invoice_number FROM invoices WHERE business_id = ?').all(businessId) as any[];
+  let prefix = 'VND-';
+  let minCounter = 1001;
 
-  let maxSeq = 0;
-  for (const inv of invoices) {
-    if (!inv.invoice_number) continue;
-    const match = inv.invoice_number.trim().match(/INV-(?:.*-)?0*(\d+)$/i);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (!isNaN(num) && num > maxSeq) maxSeq = num;
+  try {
+    const settings = db.prepare('SELECT invoice_prefix, invoice_counter FROM business_settings WHERE business_id = ?').get(businessId) as any;
+    if (settings) {
+      if (settings.invoice_prefix) prefix = settings.invoice_prefix;
+      if (settings.invoice_counter && !isNaN(Number(settings.invoice_counter))) {
+        minCounter = Number(settings.invoice_counter);
+      }
     }
+  } catch (err) {
+    console.error('[invoiceRepo] Error reading business_settings:', err);
+  }
+
+  let maxSeq = minCounter - 1;
+
+  try {
+    const invoices = db.prepare('SELECT invoice_number FROM invoices WHERE business_id = ?').all(businessId) as any[];
+    for (const inv of invoices) {
+      if (!inv.invoice_number) continue;
+      // Match any trailing digits (e.g. VND-1001, INV-01, 1002)
+      const match = String(inv.invoice_number).trim().match(/(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxSeq) {
+          maxSeq = num;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[invoiceRepo] Error scanning invoices for sequence:', err);
   }
 
   const nextSeq = maxSeq + 1;
-  return `INV-${String(nextSeq).padStart(2, '0')}`;
+  return `${prefix}${nextSeq}`;
 }
 
 export function createInvoice(
@@ -88,18 +110,19 @@ export function createInvoice(
   const transaction = db.transaction(() => {
     // 1. Reserve invoice number
     let invoiceNumber = input.invoiceNumber;
-    if (!invoiceNumber) {
-      const invoices = db.prepare('SELECT invoice_number FROM invoices WHERE business_id = ?').all(businessId) as any[];
-      let maxSeq = 0;
-      for (const inv of invoices) {
-        if (!inv.invoice_number) continue;
-        const match = inv.invoice_number.trim().match(/INV-(?:.*-)?0*(\d+)$/i);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (!isNaN(num) && num > maxSeq) maxSeq = num;
-        }
+    if (!invoiceNumber || invoiceNumber.trim() === '' || invoiceNumber === 'Loading...') {
+      invoiceNumber = getNextInvoiceNumber(db, businessId);
+    }
+
+    // Keep business_settings counter in sync
+    try {
+      const match = invoiceNumber.trim().match(/(\d+)$/);
+      if (match) {
+        const curNum = parseInt(match[1], 10);
+        db.prepare('UPDATE business_settings SET invoice_counter = MAX(invoice_counter, ?) + 1 WHERE business_id = ?').run(curNum, businessId);
       }
-      invoiceNumber = `INV-${String(maxSeq + 1).padStart(2, '0')}`;
+    } catch {
+      // Ignore counter update if setting doesn't exist
     }
 
     // 2. Manage or update customer

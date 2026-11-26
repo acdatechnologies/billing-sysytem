@@ -83,20 +83,28 @@ export async function getNextInvoiceNumber(req, res, next) {
     const businessId = req.businessId || 'default';
     const invoices = await Invoice.find({ businessId }, { invoiceNumber: 1 });
 
-    let maxSeq = 0;
+    let maxSeq = 1000;
+    let prefix = 'VND-';
+
     for (const inv of invoices) {
       if (!inv.invoiceNumber) continue;
-      const match = inv.invoiceNumber.trim().match(/INV-(?:.*-)?0*(\d+)$/i);
+      const str = String(inv.invoiceNumber).trim();
+      const match = str.match(/(\d+)$/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (!isNaN(num) && num > maxSeq) {
           maxSeq = num;
         }
       }
+      if (str.startsWith('INV-')) {
+        prefix = 'INV-';
+      } else if (str.startsWith('VND-')) {
+        prefix = 'VND-';
+      }
     }
 
     const nextSeq = maxSeq + 1;
-    const nextNumber = `INV-${String(nextSeq).padStart(2, '0')}`;
+    const nextNumber = `${prefix}${nextSeq}`;
     res.json({ success: true, nextNumber });
   } catch (err) {
     next(err);
