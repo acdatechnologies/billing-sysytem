@@ -154,14 +154,21 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 Mobile Number <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="tel"
+                maxLength={10}
                 required
                 placeholder="10-digit mobile"
                 value={formData.mobile}
-                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                className={`w-full px-3 py-2 bg-slate-50 border rounded-lg font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 ${
+                  fieldErrors.mobile ? 'border-red-400' : 'border-slate-200'
+                }`}
               />
-              <p className="text-[10px] text-slate-400 mt-0.5">Used for deduplication & WhatsApp</p>
+              {fieldErrors.mobile ? (
+                <p className="text-xs text-red-500 mt-1">{fieldErrors.mobile}</p>
+              ) : (
+                <p className="text-[10px] text-slate-400 mt-0.5">Used for deduplication & WhatsApp</p>
+              )}
             </div>
           </div>
 

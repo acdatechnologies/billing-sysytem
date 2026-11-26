@@ -26,7 +26,7 @@ import { InvoiceDetailModal } from '../components/InvoiceDetailModal';
 import { invoiceApi } from '../api/invoiceApi';
 import { productApi } from '../api/productApi';
 import { customerApi } from '../api/customerApi';
-import { validateInvoice } from '../utils/validators';
+import { validateInvoice, validateMobile } from '../utils/validators';
 
 interface CartLineItem {
   product: Product;
@@ -49,7 +49,7 @@ export const BillingPage: React.FC = () => {
   // Customer state
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
-  const [customerName, setCustomerName] = useState('Walk-in Customer');
+  const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
 
@@ -270,7 +270,7 @@ export const BillingPage: React.FC = () => {
   const handleCustomerSelect = (id: string) => {
     setSelectedCustomerId(id);
     if (!id) {
-      setCustomerName('Walk-in Customer');
+      setCustomerName('');
       setCustomerMobile('');
       setCustomerGstin('');
       return;
@@ -327,7 +327,7 @@ export const BillingPage: React.FC = () => {
   const handleClearBill = () => {
     if (cart.length > 0 && !confirm('Are you sure you want to clear this bill?')) return;
     setCart([]);
-    setCustomerName('Walk-in Customer');
+    setCustomerName('');
     setSelectedCustomerId('');
     setCustomerMobile('');
     setCustomerGstin('');
@@ -361,7 +361,7 @@ export const BillingPage: React.FC = () => {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
       })),
-      customerName,
+      customerName: customerName.trim() || 'Walk-in Customer',
       customerMobile,
       customerGstin,
       paymentMethod,
@@ -388,7 +388,7 @@ export const BillingPage: React.FC = () => {
         invoiceDate,
         invoiceTime,
         customerId: selectedCustomerId || undefined,
-        customerName: customerName.trim(),
+        customerName: customerName.trim() || 'Walk-in Customer',
         customerMobile: customerMobile.trim() || undefined,
         customerGstin: customerGstin.trim() || undefined,
         isInterstate,
@@ -434,7 +434,7 @@ export const BillingPage: React.FC = () => {
 
       // Reset form for next billing and fetch next invoice number
       setCart([]);
-      setCustomerName('Walk-in Customer');
+      setCustomerName('');
       setSelectedCustomerId('');
       setCustomerMobile('');
       setCustomerGstin('');
@@ -514,12 +514,22 @@ export const BillingPage: React.FC = () => {
               Mobile Number
             </label>
             <input
-              type="text"
+              type="tel"
+              maxLength={10}
               placeholder="10-digit mobile"
               value={customerMobile}
-              onChange={(e) => setCustomerMobile(e.target.value)}
-              className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              onChange={(e) => setCustomerMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className={`w-full p-2 bg-slate-50 border rounded-lg font-mono text-slate-800 focus:outline-none focus:ring-2 ${
+                customerMobile && validateMobile(customerMobile, false)
+                  ? 'border-red-400 focus:ring-red-500/20'
+                  : 'border-slate-200 focus:ring-red-500/20'
+              }`}
             />
+            {customerMobile && validateMobile(customerMobile, false) && (
+              <p className="text-[10px] text-red-500 mt-0.5 leading-tight">
+                {validateMobile(customerMobile, false)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -907,11 +917,10 @@ export const BillingPage: React.FC = () => {
                 onChange={handleAmountReceivedChange}
                 onKeyDown={handleAmountKeyDown}
                 placeholder="0.00"
-                className={`w-full p-2 rounded-lg font-bold text-base font-mono focus:outline-none transition-colors ${
-                  isAmountExceeded || isAmountNegative
-                    ? 'bg-red-50 border-2 border-red-500 text-red-700 focus:ring-2 focus:ring-red-500/20'
-                    : 'bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-red-500/20'
-                }`}
+                className={`w-full p-2 rounded-lg font-bold text-base font-mono focus:outline-none transition-colors ${isAmountExceeded || isAmountNegative
+                  ? 'bg-red-50 border-2 border-red-500 text-red-700 focus:ring-2 focus:ring-red-500/20'
+                  : 'bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-red-500/20'
+                  }`}
               />
 
               {isAmountExceeded && (
@@ -947,9 +956,8 @@ export const BillingPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Balance Due:</span>
                 <span
-                  className={`font-mono font-bold text-sm ${
-                    totals.balanceDue > 0 ? 'text-red-600' : 'text-emerald-600'
-                  }`}
+                  className={`font-mono font-bold text-sm ${totals.balanceDue > 0 ? 'text-red-600' : 'text-emerald-600'
+                    }`}
                 >
                   {formatCurrency(totals.balanceDue)}
                 </span>
@@ -957,13 +965,12 @@ export const BillingPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Payment Status:</span>
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    totals.paymentStatus === 'PAID'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : totals.paymentStatus === 'PARTIAL'
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${totals.paymentStatus === 'PAID'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : totals.paymentStatus === 'PARTIAL'
                       ? 'bg-amber-100 text-amber-800'
                       : 'bg-red-100 text-red-700'
-                  }`}
+                    }`}
                 >
                   {totals.paymentStatus}
                 </span>

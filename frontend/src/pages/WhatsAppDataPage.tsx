@@ -218,10 +218,11 @@ export const WhatsAppDataPage: React.FC = () => {
                 Customer Mobile Number (WhatsApp)
               </label>
               <input
-                type="text"
+                type="tel"
+                maxLength={10}
                 placeholder="10-digit mobile number"
                 value={invoiceCustomerMobile}
-                onChange={(e) => setInvoiceCustomerMobile(e.target.value)}
+                onChange={(e) => setInvoiceCustomerMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-mono font-bold text-slate-800 text-sm"
               />
               <p className="text-[10px] text-slate-400 mt-1">

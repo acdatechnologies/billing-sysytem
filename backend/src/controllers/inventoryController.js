@@ -106,6 +106,7 @@ export async function adjustStock(req, res, next) {
       movementType,
       quantity: Number(quantity),
       previousStock,
+      currentStock: newStock,
       newStock,
       referenceType: reason || 'MANUAL_ADJUSTMENT',
       referenceId: '',

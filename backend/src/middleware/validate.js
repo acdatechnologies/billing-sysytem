@@ -54,11 +54,17 @@ export function validateCustomerBody(req, res, next) {
     const cleanMobile = mobile.trim().replace(/\D/g, '');
     const normMobile = cleanMobile.length === 12 && cleanMobile.startsWith('91')
       ? cleanMobile.slice(2)
+      : cleanMobile.length === 11 && cleanMobile.startsWith('0')
+      ? cleanMobile.slice(1)
       : cleanMobile;
     if (normMobile.length !== 10) {
       errors.mobile = 'Mobile number must be exactly 10 digits.';
     } else if (!/^[6-9]\d{9}$/.test(normMobile)) {
       errors.mobile = 'Mobile number must start with 6, 7, 8, or 9.';
+    } else if (/^(\d)\1{9}$/.test(normMobile)) {
+      errors.mobile = 'Invalid mobile number: repeating dummy numbers are not allowed.';
+    } else if (['1234567890', '9876543210', '0123456789', '9876543211'].includes(normMobile)) {
+      errors.mobile = 'Invalid mobile number: dummy test numbers are not allowed.';
     }
   }
 
@@ -112,6 +118,25 @@ export function validateInvoiceBody(req, res, next) {
     const valid = ['CASH', 'UPI', 'CARD', 'NET_BANKING', 'CREDIT'];
     if (!valid.includes(paymentMethod)) {
       errors.paymentMethod = `Invalid payment method. Must be one of: ${valid.join(', ')}.`;
+    }
+  }
+
+  const customerMobile = req.body.customerMobile || req.body.customer_mobile;
+  if (customerMobile && customerMobile.trim()) {
+    const cleanMobile = customerMobile.trim().replace(/\D/g, '');
+    const normMobile = cleanMobile.length === 12 && cleanMobile.startsWith('91')
+      ? cleanMobile.slice(2)
+      : cleanMobile.length === 11 && cleanMobile.startsWith('0')
+      ? cleanMobile.slice(1)
+      : cleanMobile;
+    if (normMobile.length !== 10) {
+      errors.customerMobile = 'Mobile number must be exactly 10 digits.';
+    } else if (!/^[6-9]\d{9}$/.test(normMobile)) {
+      errors.customerMobile = 'Mobile number must start with 6, 7, 8, or 9.';
+    } else if (/^(\d)\1{9}$/.test(normMobile)) {
+      errors.customerMobile = 'Invalid mobile number: repeating dummy numbers are not allowed.';
+    } else if (['1234567890', '9876543210', '0123456789', '9876543211'].includes(normMobile)) {
+      errors.customerMobile = 'Invalid mobile number: dummy test numbers are not allowed.';
     }
   }
 

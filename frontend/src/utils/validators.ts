@@ -27,6 +27,15 @@ export function validateMobile(mobile: string | undefined | null, required = fal
   if (!/^[6-9]\d{9}$/.test(normalized)) {
     return 'Mobile number must start with 6, 7, 8, or 9.';
   }
+  // Check for repeating dummy digits (e.g. 0000000000, 1111111111, 9999999999)
+  if (/^(\d)\1{9}$/.test(normalized)) {
+    return 'Invalid mobile number: repeating dummy numbers are not allowed.';
+  }
+  // Check for common dummy test numbers
+  const dummyNumbers = ['1234567890', '9876543210', '0123456789', '9876543211'];
+  if (dummyNumbers.includes(normalized)) {
+    return 'Invalid mobile number: dummy test numbers are not allowed.';
+  }
   return null;
 }
 
@@ -217,8 +226,9 @@ export function validateInvoice(data: InvoiceValidationInput): ValidationResult 
     });
   }
 
-  if (!data.customerName || !data.customerName.trim()) {
-    errors.customerName = 'Customer name is required (use "Walk-in Customer" if unspecified).';
+  // Customer name is optional (defaults to 'Walk-in Customer' if empty)
+  if (data.customerName && data.customerName.trim().length > 0 && data.customerName.trim().length < 2) {
+    errors.customerName = 'Customer name must be at least 2 characters if provided.';
   }
 
   if (data.customerMobile && data.customerMobile.trim()) {
