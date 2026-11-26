@@ -67,7 +67,6 @@ export const BillingPage: React.FC = () => {
   const [invoiceDiscountPercent, setInvoiceDiscountPercent] = useState<number>(0);
   const [invoiceDiscountAmount, setInvoiceDiscountAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
-  const [amountReceived, setAmountReceived] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
 
   // UI state
@@ -283,46 +282,13 @@ export const BillingPage: React.FC = () => {
     }
   };
 
-  // Compute overall invoice totals
+  // Compute overall invoice totals (partial payments disabled: full settlement)
   const totals = calculateInvoiceTotals({
     items: cart.map((c) => c.calc),
     invoiceDiscountPercent,
     invoiceDiscountAmount,
-    amountReceived,
+    amountReceived: undefined,
   });
-
-  // Validation flags for payment amount
-  const isAmountExceeded = totals.grandTotal > 0 && amountReceived > totals.grandTotal;
-  const isAmountNegative = amountReceived < 0;
-
-  const handleAmountReceivedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    if (raw === '') {
-      setAmountReceived(0);
-      return;
-    }
-    const val = parseFloat(raw);
-    if (isNaN(val)) {
-      setAmountReceived(0);
-      return;
-    }
-    if (val < 0) {
-      setAmountReceived(0);
-      return;
-    }
-    setAmountReceived(val);
-  };
-
-  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (['-', '+', 'e', 'E'].includes(e.key)) {
-      e.preventDefault();
-    }
-  };
-
-  // Automatically update amount received when cart total changes if previously full paid
-  const handleQuickPayFull = () => {
-    setAmountReceived(totals.grandTotal);
-  };
 
   const handleClearBill = () => {
     if (cart.length > 0 && !confirm('Are you sure you want to clear this bill?')) return;
@@ -333,26 +299,13 @@ export const BillingPage: React.FC = () => {
     setCustomerGstin('');
     setInvoiceDiscountPercent(0);
     setInvoiceDiscountAmount(0);
-    setAmountReceived(0);
     setNotes('');
     setErrorMessage(null);
   };
 
-  // Submit Invoice
+  // Submit Invoice (Always Paid in Full)
   const handleFinalizeInvoice = async () => {
     setErrorMessage(null);
-
-    if (amountReceived < 0) {
-      setErrorMessage('Negative values are not allowed.');
-      return;
-    }
-
-    if (totals.grandTotal > 0 && amountReceived > totals.grandTotal) {
-      setErrorMessage(
-        `Amount received cannot exceed the Grand Total (₹${totals.grandTotal.toFixed(2)}).`
-      );
-      return;
-    }
 
     const validation = validateInvoice({
       items: cart.map((item) => ({
@@ -365,7 +318,7 @@ export const BillingPage: React.FC = () => {
       customerMobile,
       customerGstin,
       paymentMethod,
-      amountReceived: Number(amountReceived) || 0,
+      amountReceived: totals.grandTotal,
       grandTotal: totals.grandTotal,
     });
 
@@ -421,10 +374,10 @@ export const BillingPage: React.FC = () => {
         igstTotal: totals.igstTotal,
         grandTotal: totals.grandTotal,
         roundOff: totals.roundOff,
-        amountReceived: Number(amountReceived) || 0,
-        balanceDue: totals.balanceDue,
+        amountReceived: totals.grandTotal,
+        balanceDue: 0,
         paymentMethod,
-        paymentStatus: totals.paymentStatus,
+        paymentStatus: 'PAID',
         notes: notes.trim() || undefined,
       };
 
@@ -440,7 +393,6 @@ export const BillingPage: React.FC = () => {
       setCustomerGstin('');
       setInvoiceDiscountPercent(0);
       setInvoiceDiscountAmount(0);
-      setAmountReceived(0);
       setNotes('');
       fetchInitialData();
     } catch (err: any) {
@@ -897,82 +849,17 @@ export const BillingPage: React.FC = () => {
               </select>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-slate-600 font-semibold">Amount Received (₹)</label>
-                <button
-                  type="button"
-                  onClick={handleQuickPayFull}
-                  className="text-[10px] text-red-600 hover:text-red-800 font-bold"
-                >
-                  Exact Cash (₹{totals.grandTotal})
-                </button>
-              </div>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max={totals.grandTotal > 0 ? totals.grandTotal : undefined}
-                value={amountReceived === 0 ? '' : amountReceived}
-                onChange={handleAmountReceivedChange}
-                onKeyDown={handleAmountKeyDown}
-                placeholder="0.00"
-                className={`w-full p-2 rounded-lg font-bold text-base font-mono focus:outline-none transition-colors ${isAmountExceeded || isAmountNegative
-                  ? 'bg-red-50 border-2 border-red-500 text-red-700 focus:ring-2 focus:ring-red-500/20'
-                  : 'bg-slate-50 border border-slate-200 text-slate-900 focus:ring-2 focus:ring-red-500/20'
-                  }`}
-              />
-
-              {isAmountExceeded && (
-                <div className="flex items-start gap-1.5 p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs mt-1.5">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                  <div className="flex-1">
-                    <span className="font-bold block">
-                      Amount entered exceeds Grand Total!
-                    </span>
-                    <span className="text-[11px] text-red-600">
-                      Maximum allowed: ₹{totals.grandTotal.toFixed(2)}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleQuickPayFull}
-                    className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold shrink-0 self-center transition-colors"
-                  >
-                    Set ₹{totals.grandTotal}
-                  </button>
-                </div>
-              )}
-
-              {isAmountNegative && (
-                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs mt-1.5">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-                  <span>Negative values are not allowed.</span>
-                </div>
-              )}
-            </div>
-
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1.5">
+            <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Balance Due:</span>
-                <span
-                  className={`font-mono font-bold text-sm ${totals.balanceDue > 0 ? 'text-red-600' : 'text-emerald-600'
-                    }`}
-                >
-                  {formatCurrency(totals.balanceDue)}
+                <span className="text-emerald-900 text-xs font-semibold">Payment Settlement:</span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  FULL PAYMENT (PAID)
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500">Payment Status:</span>
-                <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${totals.paymentStatus === 'PAID'
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : totals.paymentStatus === 'PARTIAL'
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-red-100 text-red-700'
-                    }`}
-                >
-                  {totals.paymentStatus}
+              <div className="flex justify-between items-center pt-1 border-t border-emerald-200/70">
+                <span className="text-slate-600 text-xs">Total Amount Paid:</span>
+                <span className="font-mono font-bold text-base text-emerald-700">
+                  {formatCurrency(totals.grandTotal)}
                 </span>
               </div>
             </div>
@@ -993,7 +880,7 @@ export const BillingPage: React.FC = () => {
             {/* Finalize Button */}
             <button
               onClick={handleFinalizeInvoice}
-              disabled={isSubmitting || cart.length === 0 || isAmountExceeded || isAmountNegative}
+              disabled={isSubmitting || cart.length === 0}
               className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:from-red-800 active:to-rose-800 text-white font-bold rounded-xl shadow-md shadow-red-600/30 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle2 className="w-5 h-5" />

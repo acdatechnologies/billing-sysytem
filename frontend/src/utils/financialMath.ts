@@ -135,15 +135,10 @@ export function calculateInvoiceTotals(input: InvoiceTotalsCalculationInput): In
   const roundedGrand = new Decimal(Math.round(unroundedTotal.toNumber()));
   const roundOff = roundedGrand.minus(unroundedTotal);
 
-  const received = new Decimal(input.amountReceived || 0);
-  const balance = Decimal.max(0, roundedGrand.minus(received));
-
-  let paymentStatus: 'PAID' | 'PARTIAL' | 'UNPAID' = 'UNPAID';
-  if (received.greaterThanOrEqualTo(roundedGrand) && roundedGrand.greaterThan(0)) {
-    paymentStatus = 'PAID';
-  } else if (received.greaterThan(0)) {
-    paymentStatus = 'PARTIAL';
-  }
+  // Partial pay removed: All billing transactions are settled in full
+  const received = roundedGrand;
+  const balance = new Decimal(0);
+  const paymentStatus: 'PAID' | 'PARTIAL' | 'UNPAID' = roundedGrand.greaterThan(0) ? 'PAID' : 'PAID';
 
   return {
     subtotal: subtotal.toDecimalPlaces(2).toNumber(),
@@ -158,8 +153,8 @@ export function calculateInvoiceTotals(input: InvoiceTotalsCalculationInput): In
     unroundedTotal: unroundedTotal.toDecimalPlaces(2).toNumber(),
     roundOff: roundOff.toDecimalPlaces(2).toNumber(),
     grandTotal: roundedGrand.toNumber(),
-    amountReceived: received.toDecimalPlaces(2).toNumber(),
-    balanceDue: balance.toDecimalPlaces(2).toNumber(),
-    paymentStatus,
+    amountReceived: roundedGrand.toNumber(),
+    balanceDue: 0,
+    paymentStatus: 'PAID',
   };
 }

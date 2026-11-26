@@ -201,10 +201,10 @@ export function createInvoice(
       input.igstTotal,
       input.grandTotal,
       input.roundOff,
-      input.amountReceived,
-      input.balanceDue,
+      input.grandTotal,
+      0,
       input.paymentMethod,
-      input.paymentStatus,
+      'PAID',
       input.notes || null,
       now,
       now

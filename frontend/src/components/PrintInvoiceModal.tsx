@@ -382,11 +382,15 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                     <span>{invoice.payment_method}</span>
                   </div>
                   <div className="flex justify-between font-semibold">
-                    <span>Paid / Due:</span>
-                    <span>
-                      ₹{invoice.amount_received.toFixed(2)} / ₹{invoice.balance_due.toFixed(2)}
-                    </span>
+                    <span>Payment Status:</span>
+                    <span className="text-emerald-700 uppercase">{invoice.payment_status || 'PAID'}</span>
                   </div>
+                  {invoice.balance_due > 0 && (
+                    <div className="flex justify-between font-semibold text-red-600">
+                      <span>Balance Due:</span>
+                      <span>₹{invoice.balance_due.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Standard VND Tech Invoice Footer (Required by Section 3) */}
@@ -507,13 +511,19 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                         <strong className="text-slate-800 uppercase">{invoice.payment_method}</strong>
                       </div>
                       <div className="flex justify-between">
+                        <span>Payment Status:</span>
+                        <strong className="text-emerald-700 font-semibold uppercase">{invoice.payment_status || 'PAID'}</strong>
+                      </div>
+                      <div className="flex justify-between">
                         <span>Amount Paid:</span>
                         <strong className="text-emerald-700 font-mono">₹{invoice.amount_received.toFixed(2)}</strong>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Balance Due:</span>
-                        <strong className="text-red-600 font-mono">₹{invoice.balance_due.toFixed(2)}</strong>
-                      </div>
+                      {invoice.balance_due > 0 && (
+                        <div className="flex justify-between">
+                          <span>Balance Due:</span>
+                          <strong className="text-red-600 font-mono">₹{invoice.balance_due.toFixed(2)}</strong>
+                        </div>
+                      )}
                     </div>
 
                     <div className="text-[10px] text-slate-500">

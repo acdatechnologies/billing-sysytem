@@ -249,8 +249,8 @@ export function validateInvoice(data: InvoiceValidationInput): ValidationResult 
   if (data.amountReceived !== undefined) {
     if (data.amountReceived < 0) {
       errors.amountReceived = 'Negative values are not allowed.';
-    } else if (data.grandTotal !== undefined && data.grandTotal > 0 && data.amountReceived > data.grandTotal) {
-      errors.amountReceived = `Amount received cannot exceed Grand Total of ₹${data.grandTotal}.`;
+    } else if (data.grandTotal !== undefined && data.grandTotal > 0 && data.amountReceived < data.grandTotal) {
+      errors.amountReceived = `Partial payment is disabled. Full payment of ₹${data.grandTotal} is required.`;
     }
   }
 

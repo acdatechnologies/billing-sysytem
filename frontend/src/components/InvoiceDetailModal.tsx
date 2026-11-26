@@ -281,13 +281,19 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                     <span className="font-bold text-slate-800 uppercase">{invoice.payment_method}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Payment Status:</span>
+                    <span className="font-bold text-emerald-700 font-mono">{invoice.payment_status || 'PAID'}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-slate-500 font-medium">Amount Received:</span>
                     <span className="font-bold text-emerald-700 font-mono">{formatCurrency(invoice.amount_received)}</span>
                   </div>
-                  <div className="flex justify-between border-t border-slate-200/80 pt-1">
-                    <span className="text-slate-500 font-medium">Balance Due:</span>
-                    <span className="font-bold text-red-600 font-mono">{formatCurrency(invoice.balance_due)}</span>
-                  </div>
+                  {invoice.balance_due > 0 && (
+                    <div className="flex justify-between border-t border-slate-200/80 pt-1">
+                      <span className="text-slate-500 font-medium">Balance Due:</span>
+                      <span className="font-bold text-red-600 font-mono">{formatCurrency(invoice.balance_due)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {invoice.notes && (

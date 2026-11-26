@@ -9,9 +9,6 @@ import {
   History,
   BarChart3,
   Settings,
-  ShieldCheck,
-  Wifi,
-  WifiOff,
 } from 'lucide-react';
 import { NavigationTab } from '../types';
 
@@ -92,43 +89,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* System Status & Offline badge */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
-        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-800 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400 font-medium">Network Status</span>
-            <div className="flex items-center gap-1.5">
-              {isOnline ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1 text-[11px]">
-                    <Wifi className="w-3 h-3" /> Online
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span className="text-amber-400 font-semibold flex items-center gap-1 text-[11px]">
-                    <WifiOff className="w-3 h-3" /> Offline Mode
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-700/50">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-rose-400" /> Local SQLite
-            </span>
-            <span className="text-emerald-400 font-medium">Active</span>
-          </div>
-        </div>
-
-        <div className="mt-3 text-center">
-          <p className="text-[10px] text-slate-500">
-            VND Tech Billing v1.0.0
-          </p>
-        </div>
+      {/* Bottom Footer */}
+      <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 text-center">
+        <p className="text-[10px] text-slate-500">
+          VND Tech Billing v1.0.0
+        </p>
       </div>
     </aside>
   );

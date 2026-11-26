@@ -396,7 +396,6 @@ export const BillHistoryPage: React.FC = () => {
           >
             <option value="ALL">All Payments</option>
             <option value="PAID">Paid Only</option>
-            <option value="PARTIAL">Partially Paid</option>
             <option value="UNPAID">Unpaid Only</option>
           </select>
         </div>
