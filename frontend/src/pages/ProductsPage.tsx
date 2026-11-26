@@ -924,12 +924,10 @@ export const ProductsPage: React.FC = () => {
             {/* Adjustment Type Selector */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-2">Adjustment Reason</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: 'RESTOCK', label: 'Restock / Inflow', color: 'text-emerald-700 border-emerald-300 bg-emerald-50' },
-                  { id: 'DAMAGE', label: 'Damage / Loss', color: 'text-red-700 border-red-300 bg-red-50' },
                   { id: 'RETURN', label: 'Customer Return', color: 'text-rose-700 border-rose-300 bg-rose-50' },
-                  { id: 'CORRECTION', label: 'Audit Count', color: 'text-red-700 border-red-300 bg-red-50' },
                 ].map((type) => (
                   <button
                     key={type.id}
@@ -950,11 +948,11 @@ export const ProductsPage: React.FC = () => {
             {/* Quantity */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                {adjustmentType === 'CORRECTION' ? 'Verified Physical Stock Count' : 'Units to Adjust'}
+                Units to Adjust
               </label>
               <input
                 type="number"
-                min={adjustmentType === 'CORRECTION' ? 0 : 1}
+                min={1}
                 required
                 value={adjustmentQty}
                 onChange={(e) => setAdjustmentQty(parseFloat(e.target.value) || 0)}

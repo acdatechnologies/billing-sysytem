@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Boxes, PlusCircle, MinusCircle, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { X, Save, Boxes, PlusCircle, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Product, StockAdjustmentInput } from '../types';
 import { inventoryApi } from '../api/inventoryApi';
 import { validateStockAdjustment } from '../utils/validators';
@@ -154,38 +154,6 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
                 <div>
                   <div className="font-bold text-xs">Restock Intake</div>
                   <div className="text-[10px] text-slate-500">Purchase / new shipment</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMovementType('DAMAGE')}
-                className={`p-2.5 rounded-lg border text-left flex items-start gap-2 transition-all ${
-                  movementType === 'DAMAGE'
-                    ? 'border-red-600 bg-red-50/70 text-red-900 ring-1 ring-red-600'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                <MinusCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs">Damage / Expiry</div>
-                  <div className="text-[10px] text-slate-500">Deduct broken or lost units</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMovementType('CORRECTION')}
-                className={`p-2.5 rounded-lg border text-left flex items-start gap-2 transition-all ${
-                  movementType === 'CORRECTION'
-                    ? 'border-rose-600 bg-rose-50/70 text-rose-900 ring-1 ring-rose-600'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                <Boxes className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-xs">Count Correction</div>
-                  <div className="text-[10px] text-slate-500">Set exact verified count</div>
                 </div>
               </button>
 
