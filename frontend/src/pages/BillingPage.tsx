@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Receipt,
   Search,
@@ -52,6 +52,10 @@ export const BillingPage: React.FC = () => {
   const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
+  const [showMobileSuggestions, setShowMobileSuggestions] = useState(false);
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+  const mobileWrapperRef = useRef<HTMLDivElement>(null);
+  const nameWrapperRef = useRef<HTMLDivElement>(null);
 
   // Catalog & Search state
   const [products, setProducts] = useState<Product[]>([]);
@@ -107,6 +111,20 @@ export const BillingPage: React.FC = () => {
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
+
+  // Handle clicking outside customer suggestions
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mobileWrapperRef.current && !mobileWrapperRef.current.contains(e.target as Node)) {
+        setShowMobileSuggestions(false);
+      }
+      if (nameWrapperRef.current && !nameWrapperRef.current.contains(e.target as Node)) {
+        setShowNameSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Recalculate cart item when quantity, price, discount or interstate changes
   const updateCartLineCalculation = (
@@ -282,6 +300,70 @@ export const BillingPage: React.FC = () => {
     }
   };
 
+  // Filtered customer suggestions by mobile number
+  const mobileSuggestions = useMemo(() => {
+    if (!customerMobile || customerMobile.trim().length < 2) return [];
+    const q = customerMobile.trim();
+    return customers.filter((c) => c.mobile && c.mobile.includes(q)).slice(0, 6);
+  }, [customers, customerMobile]);
+
+  // Filtered customer suggestions by name
+  const nameSuggestions = useMemo(() => {
+    if (!customerName || customerName.trim().length < 2) return [];
+    const q = customerName.trim().toLowerCase();
+    return customers
+      .filter((c) => c.name && c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q)
+      .slice(0, 6);
+  }, [customers, customerName]);
+
+  // Check if current 10-digit mobile already exists in directory
+  const matchedCustomer = useMemo(() => {
+    if (!customerMobile || customerMobile.length < 10) return null;
+    return customers.find((c) => c.mobile === customerMobile);
+  }, [customers, customerMobile]);
+
+  const selectCustomerRecord = (c: any) => {
+    setSelectedCustomerId(c.id);
+    setCustomerName(c.name);
+    setCustomerMobile(c.mobile || '');
+    setCustomerGstin(c.gstin || '');
+    setShowMobileSuggestions(false);
+    setShowNameSuggestions(false);
+  };
+
+  const handleMobileInputChange = (rawVal: string) => {
+    const clean = rawVal.replace(/\D/g, '').slice(0, 10);
+    setCustomerMobile(clean);
+    setShowMobileSuggestions(clean.length >= 2);
+
+    // Auto-match exact 10-digit number
+    if (clean.length === 10) {
+      const match = customers.find((c) => c.mobile === clean);
+      if (match) {
+        setSelectedCustomerId(match.id);
+        setCustomerName(match.name);
+        if (match.gstin) setCustomerGstin(match.gstin);
+        setShowMobileSuggestions(false);
+      }
+    } else if (selectedCustomerId) {
+      const current = customers.find((c) => c.id === selectedCustomerId);
+      if (current && current.mobile !== clean) {
+        setSelectedCustomerId('');
+      }
+    }
+  };
+
+  const handleNameInputChange = (val: string) => {
+    setCustomerName(val);
+    setShowNameSuggestions(val.trim().length >= 2);
+    if (selectedCustomerId) {
+      const current = customers.find((c) => c.id === selectedCustomerId);
+      if (current && current.name !== val) {
+        setSelectedCustomerId('');
+      }
+    }
+  };
+
   // Compute overall invoice totals (partial payments disabled: full settlement)
   const totals = calculateInvoiceTotals({
     items: cart.map((c) => c.calc),
@@ -448,7 +530,7 @@ export const BillingPage: React.FC = () => {
             </select>
           </div>
 
-          <div>
+          <div ref={nameWrapperRef} className="relative">
             <label className="block text-[10px] text-slate-400 font-semibold uppercase mb-1">
               Customer Name
             </label>
@@ -456,31 +538,115 @@ export const BillingPage: React.FC = () => {
               type="text"
               placeholder="Customer name"
               value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              onFocus={() => setShowNameSuggestions(customerName.trim().length >= 2)}
+              onChange={(e) => handleNameInputChange(e.target.value)}
               className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20"
             />
+            {showNameSuggestions && nameSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Customer Suggestions</span>
+                  <span className="text-red-600 font-semibold">{nameSuggestions.length} found</span>
+                </div>
+                <div className="max-h-48 overflow-y-auto divide-y divide-slate-100">
+                  {nameSuggestions.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onMouseDown={() => selectCustomerRecord(c)}
+                      className="w-full text-left px-3 py-2 hover:bg-red-50/70 transition-colors flex items-center justify-between group cursor-pointer"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 group-hover:text-red-600">
+                          {c.name}
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-500">
+                          📞 {c.mobile}
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-semibold text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Select ↵
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div>
-            <label className="block text-[10px] text-slate-400 font-semibold uppercase mb-1">
-              Mobile Number
-            </label>
+          <div ref={mobileWrapperRef} className="relative">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[10px] text-slate-400 font-semibold uppercase">
+                Mobile Number
+              </label>
+              {matchedCustomer && (
+                <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                  ✓ {matchedCustomer.name}
+                </span>
+              )}
+            </div>
             <input
               type="tel"
               maxLength={10}
               placeholder="10-digit mobile"
               value={customerMobile}
-              onChange={(e) => setCustomerMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              onFocus={() => setShowMobileSuggestions(customerMobile.length >= 2)}
+              onChange={(e) => handleMobileInputChange(e.target.value)}
               className={`w-full p-2 bg-slate-50 border rounded-lg font-mono text-slate-800 focus:outline-none focus:ring-2 ${
                 customerMobile && validateMobile(customerMobile, false)
                   ? 'border-red-400 focus:ring-red-500/20'
+                  : matchedCustomer
+                  ? 'border-emerald-300 focus:ring-emerald-500/20'
                   : 'border-slate-200 focus:ring-red-500/20'
               }`}
             />
+            {showMobileSuggestions && mobileSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Customer Suggestions</span>
+                  <span className="text-red-600 font-semibold">{mobileSuggestions.length} found</span>
+                </div>
+                <div className="max-h-48 overflow-y-auto divide-y divide-slate-100">
+                  {mobileSuggestions.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onMouseDown={() => selectCustomerRecord(c)}
+                      className="w-full text-left px-3 py-2 hover:bg-red-50/70 transition-colors flex items-center justify-between group cursor-pointer"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 group-hover:text-red-600 flex items-center gap-1.5">
+                          <span>{c.name}</span>
+                          {c.gstin && <span className="text-[9px] px-1 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">GST</span>}
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-500">
+                          📞 {c.mobile}
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-semibold text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Select ↵
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {customerMobile && validateMobile(customerMobile, false) && (
               <p className="text-[10px] text-red-500 mt-0.5 leading-tight">
                 {validateMobile(customerMobile, false)}
               </p>
+            )}
+            {matchedCustomer && customerName && customerName.trim().toLowerCase() !== matchedCustomer.name.toLowerCase() && (
+              <div className="mt-1 p-1.5 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-800 flex items-center justify-between gap-1">
+                <span>Number belongs to <b>{matchedCustomer.name}</b></span>
+                <button
+                  type="button"
+                  onClick={() => selectCustomerRecord(matchedCustomer)}
+                  className="px-1.5 py-0.5 bg-amber-600 text-white rounded font-bold hover:bg-amber-700 transition-colors"
+                >
+                  Use {matchedCustomer.name}
+                </button>
+              </div>
             )}
           </div>
         </div>
